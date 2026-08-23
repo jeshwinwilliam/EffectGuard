@@ -25,6 +25,9 @@ def build_parser() -> argparse.ArgumentParser:
     pilot.add_argument("--failure-position", required=True)
     pilot.add_argument("--uncertainty-ms", type=int, required=True)
     pilot.add_argument("--output-dir", type=Path, required=True)
+    pilot.add_argument("--workflow-variant", default="auto")
+    pilot.add_argument("--dependency-density", default="canonical")
+    pilot.add_argument("--workflow-size", type=int, default=8)
 
     trials = subparsers.add_parser("trials")
     trials.add_argument("--strategies", nargs="+", choices=strategies, required=True)
@@ -34,6 +37,9 @@ def build_parser() -> argparse.ArgumentParser:
     trials.add_argument("--failure-position", nargs="+", required=True)
     trials.add_argument("--uncertainty-ms", nargs="+", type=int, required=True)
     trials.add_argument("--output-dir", type=Path, required=True)
+    trials.add_argument("--workflow-variant", default="auto")
+    trials.add_argument("--dependency-density", default="canonical")
+    trials.add_argument("--workflow-size", type=int, default=8)
 
     return parser
 
@@ -52,6 +58,9 @@ def main(argv: list[str] | None = None) -> int:
             failure_position=args.failure_position,
             uncertainty_duration_ms=args.uncertainty_ms,
             output_dir=str(args.output_dir),
+            workflow_variant=args.workflow_variant,
+            dependency_density=args.dependency_density,
+            workflow_size=args.workflow_size,
         )
         artifacts = runner.run_trial_artifacts(config)
         write_results(output_dir=args.output_dir, configs=config.__dict__, artifacts=[artifacts])

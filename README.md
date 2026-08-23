@@ -296,12 +296,13 @@ This strategy is also expected to finish in an incorrect final state for the can
 
 ## Fault Model
 
-The simulator currently supports four fault patterns:
+The simulator currently supports the frozen four P0 fault patterns plus one additive P1 resolved-match case:
 
 - `timeout-after-commit`
 - `delayed-visibility`
 - `partial-mutation`
 - `contradictory-late-resolution`
+- `unknown-then-failure`
 
 The most important one for EffectGuard's baseline study is `contradictory-late-resolution`. It combines:
 
@@ -310,6 +311,8 @@ The most important one for EffectGuard's baseline study is `contradictory-late-r
 - a visibility delay
 - an assumption window in which non-blocking strategies may take the wrong downstream path
 - a later positive verification result that contradicts the earlier assumption
+
+The additive P1 `unknown-then-failure` case is used to test the opposite outcome: the runtime assumes failure, later verification also resolves failure, and no contradiction-triggered selective recovery should occur.
 
 ## Repository Layout
 
@@ -324,6 +327,7 @@ The most important one for EffectGuard's baseline study is `contradictory-late-r
 - `effectguard/cli.py`: command-line entry point
 - `effectguard/services/`: inventory, reservation, payment, and notification simulators
 - `effectguard/workflow/`: stable idempotency keys and procurement workflow metadata
+- `effectguard/audit.py`: canonical five-strategy P1 audit helper
 - `effectguard/baselines/`: restart, checkpoint, and blocking policies
 - `tests/`: deterministic unit and behavioural tests
 
@@ -396,6 +400,9 @@ python -m effectguard.cli pilot \
   --fault contradictory-late-resolution \
   --failure-position reserve_a \
   --uncertainty-ms 5000 \
+  --workflow-variant p1 \
+  --dependency-density canonical \
+  --workflow-size 8 \
   --output-dir results/pilot-effectguard
 ```
 
@@ -413,6 +420,12 @@ python -m effectguard.cli trials \
 ```
 
 The matrix runner reuses the same seed across strategies for each paired configuration. That keeps the comparison focused on recovery policy rather than accidental differences in generated conditions.
+
+The CLI also accepts additive experiment-shaping fields for future P1 work:
+
+- `--workflow-variant`
+- `--dependency-density`
+- `--workflow-size`
 
 ## Result Files
 
@@ -468,6 +481,7 @@ P1 also tracks:
 - `compensation_failures`
 - `invalid_external_effects_remaining`
 - `unsupported_irreversible_effects`
+- `validity_metadata_bytes`
 
 ### Recovery Latency
 
@@ -488,6 +502,17 @@ How many read-only verification checks the strategy performed. This is tracked s
 ### Instrumentation Overhead
 
 Bookkeeping overhead measured with `perf_counter_ns`. This is descriptive microbenchmark data, not a platform-independent performance claim.
+
+### Recovery Status
+
+P1 distinguishes:
+
+- `RECOVERED`
+- `RECOVERY_UNSUPPORTED`
+- `RECOVERY_UNSAFE`
+- `RECOVERY_FAILED`
+
+`RECOVERY_UNSAFE` is reserved for cases where a compensation precondition is violated and the runtime refuses to proceed with a risky repair.
 
 ## Expected Canonical Outcome
 

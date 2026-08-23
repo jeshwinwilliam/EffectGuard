@@ -41,6 +41,7 @@ class FaultKind(str, Enum):
     DELAYED_VISIBILITY = "DELAYED_VISIBILITY"
     PARTIAL_MUTATION = "PARTIAL_MUTATION"
     CONTRADICTORY_LATE_RESOLUTION = "CONTRADICTORY_LATE_RESOLUTION"
+    UNKNOWN_THEN_FAILURE = "UNKNOWN_THEN_FAILURE"
 
 
 class FaultPoint(str, Enum):
@@ -322,6 +323,8 @@ class TrialConfig:
     uncertainty_duration_ms: int
     output_dir: str
     workflow_variant: str = "auto"
+    dependency_density: str = "canonical"
+    workflow_size: int = 8
 
 
 @dataclass(frozen=True)
@@ -341,6 +344,8 @@ class TrialMetrics:
     repeated_external_calls: int
     repeated_mutating_calls: int
     verification_reads: int
+    operations_executed: int
+    operations_reexecuted: int
     runtime_replayed_operations: int
     contradiction_detected: bool
     instrumentation_ns: int
@@ -364,6 +369,7 @@ class TrialMetrics:
     uncertainty_wait_time: int = 0
     dependency_records_created: int = 0
     assumption_records_created: int = 0
+    validity_metadata_bytes: int = 0
     event_count: int = 0
     planner_wall_time_ns: int = 0
     tracking_wall_time_ns: int = 0

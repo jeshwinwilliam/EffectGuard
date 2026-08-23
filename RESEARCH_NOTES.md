@@ -58,6 +58,8 @@ P1 includes:
 - semantic and effect-aware candidate recovery via `effectguard`
 - compensable shipment-aware canonical recovery tests
 - honest failure handling for compensation failure and unsupported irreversible effects
+- a resolved-match `unknown-then-failure` path for no-contradiction evaluation
+- additive experiment-schema support for workflow variant, dependency density, and workflow size
 
 P1 does not yet include:
 

@@ -24,7 +24,18 @@ def summarise_metrics(metrics: list[TrialMetrics]) -> list[dict[str, object]]:
         "repeated_external_calls",
         "repeated_mutating_calls",
         "verification_reads",
+        "operations_executed",
+        "operations_reexecuted",
         "runtime_replayed_operations",
+        "compensation_count",
+        "compensation_failures",
+        "operations_recomputed",
+        "operations_revalidated",
+        "invalid_external_effects_remaining",
+        "unsupported_irreversible_effects",
+        "uncertainty_wait_time",
+        "event_count",
+        "validity_metadata_bytes",
     ]
     for (strategy, fault_kind, failure_position, uncertainty_duration_ms), rows in groups.items():
         summary: dict[str, object] = {

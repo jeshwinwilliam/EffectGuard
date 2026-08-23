@@ -65,7 +65,10 @@ class ReservationService:
         inventory_applied = False
         actual_status = ActualStatus.COMMITTED
         status = "ACTIVE"
-        if fault.apply_fault and fault.kind is FaultKind.PARTIAL_MUTATION:
+        if fault.apply_fault and fault.kind is FaultKind.UNKNOWN_THEN_FAILURE:
+            actual_status = ActualStatus.NOT_EXECUTED
+            status = "FAILED"
+        elif fault.apply_fault and fault.kind is FaultKind.PARTIAL_MUTATION:
             actual_status = ActualStatus.PARTIAL
             status = "PARTIAL"
             if fault.note == "inventory_only":
@@ -102,7 +105,12 @@ class ReservationService:
 
         if not fault.apply_fault:
             return ToolResult(ObservedStatus.SUCCESS, record.to_view())
-        if fault.kind in {FaultKind.TIMEOUT_AFTER_COMMIT, FaultKind.DELAYED_VISIBILITY, FaultKind.CONTRADICTORY_LATE_RESOLUTION}:
+        if fault.kind in {
+            FaultKind.TIMEOUT_AFTER_COMMIT,
+            FaultKind.DELAYED_VISIBILITY,
+            FaultKind.CONTRADICTORY_LATE_RESOLUTION,
+            FaultKind.UNKNOWN_THEN_FAILURE,
+        }:
             return ToolResult(ObservedStatus.UNKNOWN, None, error="visibility ambiguous", retryable=True)
         if fault.kind is FaultKind.PARTIAL_MUTATION:
             return ToolResult(ObservedStatus.PARTIAL, record.to_view(), error="partial mutation observed", retryable=False)
@@ -116,6 +124,8 @@ class ReservationService:
         now_ms = self.clock.peek()
         if now_ms < record.visible_at_ms:
             return ToolResult(ObservedStatus.UNKNOWN, None, error="not yet visible", retryable=True)
+        if record.actual_status is ActualStatus.NOT_EXECUTED:
+            return ToolResult(ObservedStatus.FAILURE, None, error="reservation missing", retryable=False)
         if record.actual_status is ActualStatus.PARTIAL:
             return ToolResult(ObservedStatus.PARTIAL, record.to_view(), error="partial effect visible", retryable=False)
         return ToolResult(ObservedStatus.SUCCESS, record.to_view())

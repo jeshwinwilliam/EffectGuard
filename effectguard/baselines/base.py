@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from json import dumps
 from time import perf_counter_ns
 
 from ..clock import VirtualClock
@@ -460,6 +461,14 @@ class RunEnvironment:
                 assumption="FAILURE",
                 **self._metadata_for("reserve_a"),
             )
+            self.runtime_log.append(
+                event_type="contradiction_detected",
+                sim_time_ms=self.clock.peek(),
+                attempt=self.runtime.operation_attempts.get("reserve_a", 0),
+                observed_status="SUCCESS",
+                assumption="FAILURE",
+                **self._metadata_for("reserve_a"),
+            )
             return True
         if status is ObservedStatus.FAILURE and self.assumption_records:
             assumption = self.assumption_records.get("assumption-reserve_a")
@@ -467,7 +476,34 @@ class RunEnvironment:
                 assumption.resolution_state = ObservedStatus.FAILURE
                 assumption.resolved_at_virtual_time_ms = self.clock.peek()
                 assumption.status = AssumptionStatus.RESOLVED_MATCH
+                self.runtime_log.append(
+                    event_type="assumption_resolved",
+                    sim_time_ms=self.clock.peek(),
+                    attempt=self.runtime.operation_attempts.get("reserve_a", 0),
+                    observed_status="FAILURE",
+                    assumption="FAILURE",
+                    assumption_status=assumption.status.value,
+                    **self._metadata_for("reserve_a"),
+                )
         return False
+
+    def validity_metadata_bytes(self) -> int:
+        payload = {
+            "assumptions": {
+                key: {
+                    "uncertainty_id": value.uncertainty_id,
+                    "source_operation_id": value.source_operation_id,
+                    "observed_state": value.observed_state.value,
+                    "assumed_state": value.assumed_state.value,
+                    "status": value.status.value,
+                }
+                for key, value in self.assumption_records.items()
+            },
+            "workflow_variant": self.config.workflow_variant,
+            "dependency_density": self.config.dependency_density,
+            "workflow_size": self.config.workflow_size,
+        }
+        return len(dumps(payload, sort_keys=True).encode("utf-8"))
 
 
 def build_run_id(config: TrialConfig) -> str:

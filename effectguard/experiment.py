@@ -6,6 +6,7 @@ from pathlib import Path
 from statistics import mean
 from time import perf_counter_ns
 from typing import Sequence
+import json
 
 from .baselines import run_blocking, run_checkpoint, run_dependency_only, run_effectguard, run_restart
 from .baselines.base import RunEnvironment, build_run_id
@@ -140,6 +141,8 @@ class ExperimentRunner:
             repeated_external_calls=env.repeated_external_calls,
             repeated_mutating_calls=env.repeated_mutating_calls,
             verification_reads=env.verification_reads,
+            operations_executed=sum(1 for event in env.runtime_log.events() if event["event_type"] == "operation"),
+            operations_reexecuted=env.replayed_operations,
             runtime_replayed_operations=env.replayed_operations,
             contradiction_detected=env.contradiction_detected,
             instrumentation_ns=env.runtime.instrumentation_ns,
@@ -163,6 +166,7 @@ class ExperimentRunner:
             uncertainty_wait_time=env.uncertainty_wait_time,
             dependency_records_created=env.dependency_records_created,
             assumption_records_created=env.assumption_records_created,
+            validity_metadata_bytes=env.validity_metadata_bytes(),
             event_count=len(env.runtime_log.events()),
             planner_wall_time_ns=env.planner_wall_time_ns,
             tracking_wall_time_ns=env.tracking_wall_time_ns,

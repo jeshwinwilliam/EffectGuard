@@ -108,6 +108,23 @@ def build_effectguard_plan(env) -> RecoveryPlan:
         )
         for operation_id in operation_ids
     ]
+    for evaluation in evaluations:
+        env.runtime_log.append(
+            event_type="validity_evaluated",
+            sim_time_ms=env.clock.peek(),
+            run_id=env.runtime.run_id,
+            seed=env.config.seed,
+            workflow_id=env.workflow.workflow_id,
+            workflow_instance_id=env.config.workflow_instance_id,
+            strategy=env.config.strategy,
+            operation_id=evaluation.operation_id,
+            operation_type="recovery",
+            effect_class=env.workflow.operations[evaluation.operation_id].effect_class.value,
+            attempt=0,
+            observed_status=evaluation.result.value,
+            compensation_indicator=False,
+            reason=evaluation.reason,
+        )
     invalidated = tuple(sorted(evaluation.operation_id for evaluation in evaluations if evaluation.result.value == "INVALID"))
     preserved = tuple(
         sorted(
