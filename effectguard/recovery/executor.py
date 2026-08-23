@@ -169,6 +169,40 @@ def execute_recovery_plan(env, plan) -> RecoveryStatus:
                 compensation_indicator=False,
             )
             env.op_record_audit(recovery=True)
+        elif action.operation_id == "record_finance_snapshot":
+            env.runtime_log.append(
+                event_type="recomputation_started",
+                sim_time_ms=env.clock.peek(),
+                run_id=env.runtime.run_id,
+                seed=env.config.seed,
+                workflow_id=env.workflow.workflow_id,
+                workflow_instance_id=env.config.workflow_instance_id,
+                strategy=env.config.strategy,
+                operation_id="record_finance_snapshot",
+                operation_type="recovery",
+                effect_class="PURE",
+                attempt=0,
+                observed_status="PENDING",
+                compensation_indicator=False,
+            )
+            env.op_record_finance_snapshot(recovery=True)
+        elif action.operation_id == "supplier_annotation":
+            env.runtime_log.append(
+                event_type="recomputation_started",
+                sim_time_ms=env.clock.peek(),
+                run_id=env.runtime.run_id,
+                seed=env.config.seed,
+                workflow_id=env.workflow.workflow_id,
+                workflow_instance_id=env.config.workflow_instance_id,
+                strategy=env.config.strategy,
+                operation_id="supplier_annotation",
+                operation_type="recovery",
+                effect_class="PURE",
+                attempt=0,
+                observed_status="PENDING",
+                compensation_indicator=False,
+            )
+            env.op_supplier_annotation(recovery=True)
     env.recovery_status = RecoveryStatus.RECOVERED
     env.runtime_log.append(
         event_type="recovery_completed",

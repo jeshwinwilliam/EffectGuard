@@ -93,3 +93,44 @@ def test_effectguard_semantic_selectivity_preserves_valid_descendant() -> None:
     ]
     assert effectguard_ops.count("record_audit") == 1
     assert dependency_ops.count("record_audit") == 2
+
+
+def test_effectguard_preserves_multiple_valid_descendants() -> None:
+    effectguard_artifacts = ExperimentRunner().run_trial_artifacts(_variant_config("effectguard", "p1_selective_double"))
+    dependency_artifacts = ExperimentRunner().run_trial_artifacts(_variant_config("dependency_only", "p1_selective_double"))
+    for operation_id in ("record_audit", "record_finance_snapshot"):
+        assert operation_id not in effectguard_artifacts.metrics.selected_invalidated_operations
+        assert operation_id in dependency_artifacts.metrics.selected_invalidated_operations
+    effectguard_ops = [
+        event["operation_id"]
+        for event in effectguard_artifacts.runtime_events
+        if event["event_type"] == "operation"
+    ]
+    dependency_ops = [
+        event["operation_id"]
+        for event in dependency_artifacts.runtime_events
+        if event["event_type"] == "operation"
+    ]
+    assert effectguard_ops.count("record_audit") == 1
+    assert effectguard_ops.count("record_finance_snapshot") == 1
+    assert dependency_ops.count("record_audit") == 2
+    assert dependency_ops.count("record_finance_snapshot") == 2
+
+
+def test_effectguard_preserves_multi_dependency_annotation() -> None:
+    effectguard_artifacts = ExperimentRunner().run_trial_artifacts(_variant_config("effectguard", "p1_multi_dependency"))
+    dependency_artifacts = ExperimentRunner().run_trial_artifacts(_variant_config("dependency_only", "p1_multi_dependency"))
+    assert "supplier_annotation" not in effectguard_artifacts.metrics.selected_invalidated_operations
+    assert "supplier_annotation" in dependency_artifacts.metrics.selected_invalidated_operations
+    effectguard_ops = [
+        event["operation_id"]
+        for event in effectguard_artifacts.runtime_events
+        if event["event_type"] == "operation"
+    ]
+    dependency_ops = [
+        event["operation_id"]
+        for event in dependency_artifacts.runtime_events
+        if event["event_type"] == "operation"
+    ]
+    assert effectguard_ops.count("supplier_annotation") == 1
+    assert dependency_ops.count("supplier_annotation") == 2

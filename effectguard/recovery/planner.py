@@ -63,10 +63,16 @@ def build_dependency_only_plan(env) -> RecoveryPlan:
         RecoveryAction(action_type=RecoveryActionType.REEXECUTE, operation_id="create_shipment", target_supplier_id="A", reason="recreate shipment on A"),
         RecoveryAction(action_type=RecoveryActionType.RECOMPUTE, operation_id="build_procurement_plan", target_supplier_id="A", reason="rebuild final plan"),
     ]
-    if "record_audit" in invalidated:
-        recomputation_actions.append(
-            RecoveryAction(action_type=RecoveryActionType.RECOMPUTE, operation_id="record_audit", target_supplier_id="A", reason="conservative descendant replay")
-        )
+    for operation_id in ("record_audit", "record_finance_snapshot", "supplier_annotation"):
+        if operation_id in invalidated:
+            recomputation_actions.append(
+                RecoveryAction(
+                    action_type=RecoveryActionType.RECOMPUTE,
+                    operation_id=operation_id,
+                    target_supplier_id="A",
+                    reason="conservative descendant replay",
+                )
+            )
     env.planner_wall_time_ns += perf_counter_ns() - started
     return RecoveryPlan(
         contradiction_id="contradiction-reserve_a",
@@ -87,6 +93,10 @@ def build_effectguard_plan(env) -> RecoveryPlan:
     operation_ids = ["choose_b", "reserve_b", "create_shipment", "build_procurement_plan", "calculate_tax"]
     if "record_audit" in env.workflow.operations:
         operation_ids.append("record_audit")
+    if "record_finance_snapshot" in env.workflow.operations:
+        operation_ids.append("record_finance_snapshot")
+    if "supplier_annotation" in env.workflow.operations:
+        operation_ids.append("supplier_annotation")
     if "send_notification" in env.workflow.operations:
         operation_ids.append("send_notification")
     evaluations = [

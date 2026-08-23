@@ -15,6 +15,10 @@ def run_effectguard(env: RunEnvironment) -> None:
         env.op_choose_b()
         if "record_audit" in env.workflow.operations:
             env.op_record_audit()
+        if "record_finance_snapshot" in env.workflow.operations:
+            env.op_record_finance_snapshot()
+        if "supplier_annotation" in env.workflow.operations:
+            env.op_supplier_annotation()
         env.op_reserve_b()
         env.op_create_shipment(supplier_id="B")
         if "send_notification" in env.workflow.operations:

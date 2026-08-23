@@ -22,7 +22,9 @@ from .services.reservation import ReservationService
 from .services.shipment import ShipmentService
 from .workflow.procurement import (
     build_procurement_p1_irreversible_workflow,
+    build_procurement_p1_multi_dependency_workflow,
     build_procurement_p1_selective_workflow,
+    build_procurement_p1_selective_double_workflow,
     build_procurement_p1_workflow,
     build_procurement_workflow,
 )
@@ -41,6 +43,10 @@ def create_environment(config: TrialConfig) -> RunEnvironment:
     notifications = NotificationService()
     if config.workflow_variant == "p1_selective":
         workflow = build_procurement_p1_selective_workflow()
+    elif config.workflow_variant == "p1_selective_double":
+        workflow = build_procurement_p1_selective_double_workflow()
+    elif config.workflow_variant == "p1_multi_dependency":
+        workflow = build_procurement_p1_multi_dependency_workflow()
     elif config.workflow_variant == "p1_irreversible":
         workflow = build_procurement_p1_irreversible_workflow()
     elif config.workflow_variant in {"p1", "p1_compensation_failure"} or config.strategy in {"dependency_only", "effectguard"}:

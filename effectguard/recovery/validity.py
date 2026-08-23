@@ -12,8 +12,12 @@ def evaluate_validity(
 ) -> ValidityEvaluation:
     if operation_id == "calculate_tax":
         return ValidityEvaluation(operation_id=operation_id, result=ValidityResult.VALID, reason="tax is independent")
-    if operation_id == "record_audit":
-        return ValidityEvaluation(operation_id=operation_id, result=ValidityResult.VALID, reason="audit record remains valid historical evidence")
+    if operation_id in {"record_audit", "record_finance_snapshot", "supplier_annotation"}:
+        return ValidityEvaluation(
+            operation_id=operation_id,
+            result=ValidityResult.VALID,
+            reason="derived analytical record remains valid historical evidence",
+        )
     if operation_id == "choose_b":
         if resolved_supplier_id == "A":
             return ValidityEvaluation(operation_id=operation_id, result=ValidityResult.INVALID, reason="fallback choice contradicted")

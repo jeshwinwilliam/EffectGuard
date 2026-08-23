@@ -269,6 +269,56 @@ class RunEnvironment:
             **self._metadata_for(ctx.operation_id),
         )
 
+    def op_record_finance_snapshot(self, *, recovery: bool = False) -> None:
+        started = self.runtime.begin_tracking()
+        ctx = self.runtime.next_context(
+            operation_id="record_finance_snapshot",
+            sim_time_ms=self.clock.peek(),
+            idempotency_key=None,
+        )
+        self.runtime.end_tracking(started)
+        if recovery:
+            self.replayed_operations += 1
+            self.operations_recomputed += 1
+        self.runtime.operation_results["record_finance_snapshot"] = {
+            "message": "fallback finance snapshot recorded",
+            "supplier_id": "B",
+            "tax_minor": 375,
+        }
+        self.runtime_log.append(
+            event_type="operation",
+            sim_time_ms=self.clock.peek(),
+            attempt=ctx.attempt,
+            observed_status="SUCCESS",
+            recovery=recovery,
+            **self._metadata_for(ctx.operation_id),
+        )
+
+    def op_supplier_annotation(self, *, recovery: bool = False) -> None:
+        started = self.runtime.begin_tracking()
+        ctx = self.runtime.next_context(
+            operation_id="supplier_annotation",
+            sim_time_ms=self.clock.peek(),
+            idempotency_key=None,
+        )
+        self.runtime.end_tracking(started)
+        if recovery:
+            self.replayed_operations += 1
+            self.operations_recomputed += 1
+        self.runtime.operation_results["supplier_annotation"] = {
+            "message": "supplier annotation recorded",
+            "supplier_id": "B",
+            "tax_minor": 375,
+        }
+        self.runtime_log.append(
+            event_type="operation",
+            sim_time_ms=self.clock.peek(),
+            attempt=ctx.attempt,
+            observed_status="SUCCESS",
+            recovery=recovery,
+            **self._metadata_for(ctx.operation_id),
+        )
+
     def op_create_shipment(self, *, supplier_id: str, recovery: bool = False) -> None:
         logical_args = {"supplier_id": supplier_id, "sku": "SKU-1", "quantity": self.required_quantity}
         key = stable_sha256_key(
