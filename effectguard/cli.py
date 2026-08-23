@@ -5,6 +5,7 @@ from pathlib import Path
 from statistics import mean
 
 from .artifact_eval import evaluate_artifact
+from .paper_outputs import generate_paper_outputs
 from .experiment import ExperimentRunner, write_results
 from .models import FaultKind, TrialConfig
 
@@ -45,6 +46,9 @@ def build_parser() -> argparse.ArgumentParser:
     artifact_eval = subparsers.add_parser("artifact-eval")
     artifact_eval.add_argument("--output-dir", type=Path, required=True)
 
+    paper_assets = subparsers.add_parser("paper-assets")
+    paper_assets.add_argument("--output-dir", type=Path, required=True)
+
     return parser
 
 
@@ -78,6 +82,14 @@ def main(argv: list[str] | None = None) -> int:
         result = evaluate_artifact(args.output_dir)
         print(
             f"artifact_status={result['status']} "
+            f"output={args.output_dir}"
+        )
+        return 0
+
+    if args.command == "paper-assets":
+        result = generate_paper_outputs(args.output_dir)
+        print(
+            f"paper_assets_status={result['status']} "
             f"output={args.output_dir}"
         )
         return 0
