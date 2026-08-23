@@ -20,6 +20,8 @@ EffectGuard preserved final-state correctness on supported runs in the main matr
 Against `checkpoint`, EffectGuard reduced semantic recovery amplification by about 0.7895 on average in the main matrix.
 Against `blocking`, EffectGuard reduced total virtual completion time by about 350.0 virtual-time units on average in the main matrix.
 Against `dependency_only`, unaffected preservation did not separate in the current generated workloads, which is a real novelty-risk signal rather than something to hide.
+The P2.1 semantic-selection correction found that the unchanged main raw dataset does separate EffectGuard from `dependency_only` on recovery-selection precision, unnecessary selection, and unweighted recovery work when `semantic_gap > 0`.
+P2.1 kept the original zero-difference unaffected-preservation endpoint, while reporting an overall novelty-risk rating of `MEDIUM` because the validity predicates remain workload-authored.
 The focused effect-composition study exposed the intended safety boundary: unsupported runs appeared in irreversible-boundary configurations instead of being misreported as successful recovery.
 The overhead study showed no completion-time separation in the saved no-ambiguity overhead slice, which suggests the current simulator configuration is not yet producing a measurable normal-path latency penalty there.
 The compensation-failure study exposed a concrete failure boundary: selective strategies accumulated recovery failures under deterministic compensation failure injection rather than being silently counted as correct.
@@ -33,7 +35,8 @@ Unsupported configurations and recovery failures remain visible in the saved cam
 
 These results are from a deterministic simulator, not a production workflow engine.
 The generated workloads are structured and interpretable, but they are still synthetic.
-The current semantic-selectivity comparison did not separate EffectGuard from dependency_only on unaffected-preservation rate in the main saved matrix.
+The preserved unaffected-preservation endpoint still does not separate EffectGuard from dependency_only in the saved main matrix.
+The P2.1 semantic-selection advantage is stronger than the original endpoint, but the predicate layer remains workload-authored and therefore keeps novelty risk above LOW.
 
 ## Artifact Map
 

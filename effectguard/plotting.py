@@ -3,6 +3,8 @@ from __future__ import annotations
 from html import escape
 from pathlib import Path
 
+from PIL import Image, ImageDraw
+
 
 COLOURS = {
     "restart": "#d94841",
@@ -328,4 +330,184 @@ def write_p2_campaign_figures(
             x_values=durations,
             series=series,
             output_path=output_dir / "blocking_vs_effectguard_completion_time.svg",
+        )
+
+
+def _write_png_bar_chart(
+    *,
+    title: str,
+    labels: list[str],
+    values: list[float],
+    output_path: Path,
+    colours: list[str],
+) -> None:
+    width = max(720, 120 * max(1, len(labels)))
+    height = 420
+    margin_left = 70
+    margin_right = 30
+    margin_top = 50
+    margin_bottom = 100
+    plot_width = width - margin_left - margin_right
+    plot_height = height - margin_top - margin_bottom
+    y_max = max(values, default=1.0)
+    if y_max <= 0:
+        y_max = 1.0
+    image = Image.new("RGB", (width, height), "white")
+    draw = ImageDraw.Draw(image)
+    draw.text((width / 2 - len(title) * 3, 14), title, fill="#111111")
+    draw.line((margin_left, margin_top, margin_left, margin_top + plot_height), fill="#333333", width=2)
+    draw.line(
+        (margin_left, margin_top + plot_height, margin_left + plot_width, margin_top + plot_height),
+        fill="#333333",
+        width=2,
+    )
+    step = plot_width / max(1, len(labels))
+    bar_width = min(72, step * 0.6)
+    for index, (label, value) in enumerate(zip(labels, values)):
+        x = margin_left + step * index + step / 2 - bar_width / 2
+        bar_height = 0 if y_max == 0 else (value / y_max) * plot_height
+        y = margin_top + plot_height - bar_height
+        draw.rectangle((x, y, x + bar_width, margin_top + plot_height), fill=colours[index], outline=colours[index])
+        draw.text((x + 4, y - 14), f"{value:.2f}", fill="#111111")
+        draw.text((x - 8, margin_top + plot_height + 12), label, fill="#111111")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    image.save(output_path)
+
+
+def _write_png_line_chart(
+    *,
+    title: str,
+    x_values: list[float],
+    y_values: list[float],
+    x_label: str,
+    y_label: str,
+    output_path: Path,
+    colour: str = "#1d3557",
+) -> None:
+    width = 720
+    height = 420
+    margin_left = 70
+    margin_right = 30
+    margin_top = 50
+    margin_bottom = 70
+    plot_width = width - margin_left - margin_right
+    plot_height = height - margin_top - margin_bottom
+    image = Image.new("RGB", (width, height), "white")
+    draw = ImageDraw.Draw(image)
+    draw.text((width / 2 - len(title) * 3, 14), title, fill="#111111")
+    draw.text((width / 2 - len(x_label) * 3, height - 20), x_label, fill="#111111")
+    draw.text((12, height / 2), y_label, fill="#111111")
+    draw.line((margin_left, margin_top, margin_left, margin_top + plot_height), fill="#333333", width=2)
+    draw.line(
+        (margin_left, margin_top + plot_height, margin_left + plot_width, margin_top + plot_height),
+        fill="#333333",
+        width=2,
+    )
+    x_min = min(x_values)
+    x_max = max(x_values)
+    y_max = max(y_values) if y_values else 1.0
+    if y_max <= 0:
+        y_max = 1.0
+
+    def point_x(value: float) -> float:
+        if x_max == x_min:
+            return margin_left + plot_width / 2
+        return margin_left + ((value - x_min) / (x_max - x_min)) * plot_width
+
+    def point_y(value: float) -> float:
+        return margin_top + plot_height - (value / y_max) * plot_height
+
+    points = [(point_x(x_value), point_y(y_value)) for x_value, y_value in zip(x_values, y_values)]
+    for index in range(1, len(points)):
+        draw.line((*points[index - 1], *points[index]), fill=colour, width=3)
+    for x_value, y_value, point in zip(x_values, y_values, points):
+        draw.ellipse((point[0] - 4, point[1] - 4, point[0] + 4, point[1] + 4), fill=colour, outline=colour)
+        draw.text((point[0] - 8, margin_top + plot_height + 8), str(int(x_value) if float(x_value).is_integer() else x_value), fill="#111111")
+        draw.text((point[0] - 10, point[1] - 18), f"{y_value:.2f}", fill="#111111")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    image.save(output_path)
+
+
+def write_p21_semantic_selection_figures(
+    *,
+    precision_means: dict[str, float],
+    semantic_gap_advantage: list[dict[str, object]],
+    workflow_size_work_means: list[dict[str, object]],
+    output_dir: Path,
+) -> None:
+    labels = ["effectguard", "dependency_only"]
+    colours = [COLOURS["effectguard"], COLOURS["dependency_only"]]
+    values = [precision_means["effectguard"], precision_means["dependency_only"]]
+    _svg_bar_chart(
+        title="Selection Precision (semantic_gap > 0)",
+        y_label="Mean Precision",
+        labels=labels,
+        values=values,
+        output_path=output_dir / "semantic_selection_precision_positive_gap.svg",
+        colours=colours,
+        value_formatter=lambda value: f"{value:.2f}",
+    )
+    _write_png_bar_chart(
+        title="Selection Precision (semantic_gap > 0)",
+        labels=labels,
+        values=values,
+        output_path=output_dir / "semantic_selection_precision_positive_gap.png",
+        colours=colours,
+    )
+
+    if semantic_gap_advantage:
+        x_values = [float(row["group"]) for row in semantic_gap_advantage]
+        y_values = [float(row["unnecessary_selected_count_difference_mean"]) for row in semantic_gap_advantage]
+        _svg_grouped_line_chart(
+            title="Semantic Gap vs Unnecessary Selection Advantage",
+            x_label="Semantic Gap",
+            y_label="dependency_only - effectguard",
+            x_values=[int(value) for value in x_values],
+            series={"unnecessary_selection_advantage": y_values},
+            output_path=output_dir / "semantic_gap_vs_unnecessary_selection_advantage.svg",
+        )
+        _write_png_line_chart(
+            title="Semantic Gap vs Unnecessary Selection Advantage",
+            x_values=x_values,
+            y_values=y_values,
+            x_label="Semantic Gap",
+            y_label="dependency_only - effectguard",
+            output_path=output_dir / "semantic_gap_vs_unnecessary_selection_advantage.png",
+        )
+
+    if workflow_size_work_means:
+        labels = [str(int(row["group"])) for row in workflow_size_work_means]
+        eg_values = [float(row["recovery_work_effectguard_mean"]) for row in workflow_size_work_means]
+        dep_values = [float(row["recovery_work_dependency_only_mean"]) for row in workflow_size_work_means]
+        _svg_bar_chart(
+            title="Recovery Work by Workflow Size (EffectGuard)",
+            y_label="Mean Recovery Work",
+            labels=labels,
+            values=eg_values,
+            output_path=output_dir / "recovery_work_by_workflow_size_effectguard.svg",
+            colours=[COLOURS["effectguard"]] * len(labels),
+            value_formatter=lambda value: f"{value:.1f}",
+        )
+        _svg_bar_chart(
+            title="Recovery Work by Workflow Size (dependency_only)",
+            y_label="Mean Recovery Work",
+            labels=labels,
+            values=dep_values,
+            output_path=output_dir / "recovery_work_by_workflow_size_dependency_only.svg",
+            colours=[COLOURS["dependency_only"]] * len(labels),
+            value_formatter=lambda value: f"{value:.1f}",
+        )
+        _write_png_bar_chart(
+            title="Recovery Work by Workflow Size (EffectGuard)",
+            labels=labels,
+            values=eg_values,
+            output_path=output_dir / "recovery_work_by_workflow_size_effectguard.png",
+            colours=[COLOURS["effectguard"]] * len(labels),
+        )
+        _write_png_bar_chart(
+            title="Recovery Work by Workflow Size (dependency_only)",
+            labels=labels,
+            values=dep_values,
+            output_path=output_dir / "recovery_work_by_workflow_size_dependency_only.png",
+            colours=[COLOURS["dependency_only"]] * len(labels),
         )

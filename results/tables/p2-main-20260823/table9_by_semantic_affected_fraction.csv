@@ -1,0 +1,4 @@
+group,pair_count,selection_precision_effectguard_mean,selection_precision_dependency_only_mean,selection_precision_difference_mean,unnecessary_selected_count_effectguard_mean,unnecessary_selected_count_dependency_only_mean,unnecessary_selected_count_difference_mean,recovery_work_effectguard_mean,recovery_work_dependency_only_mean,recovery_work_difference_mean,selected_count_effectguard_mean,selected_count_dependency_only_mean,selected_count_difference_mean,semantic_gap_effectguard_mean,semantic_gap_dependency_only_mean,semantic_gap_difference_mean
+0.1,1080,1.0,0.3823529411764724,0.6176470588235293,0.0,14.5,14.5,6.0,35.0,29.0,4.5,19.0,14.5,14.5,14.5,0.0
+0.25,1080,1.0,0.4542483660130747,0.5457516339869257,0.0,13.0,13.0,6.0,32.0,26.0,6.0,19.0,13.0,13.0,13.0,0.0
+0.5,1080,1.0,0.6013071895424894,0.3986928104575149,0.0,9.0,9.0,6.0,24.0,18.0,10.0,19.0,9.0,9.0,9.0,0.0

@@ -1,0 +1,3 @@
+strategy,n,selection_precision_mean,selection_recall_mean,selected_invalidated_count_mean,unnecessary_selected_count_mean,recovery_work_mean,correctness_rate
+effectguard,3240,1.0,1.0,6.833333333333333,0.0,6.0,1.0
+dependency_only,3240,0.47930283224400555,1.0,19.0,12.166666666666666,30.333333333333332,1.0

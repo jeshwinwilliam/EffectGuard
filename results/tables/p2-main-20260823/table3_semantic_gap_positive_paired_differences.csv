@@ -1,0 +1,5 @@
+metric,difference_name,mean_difference,ci95_low,ci95_high,effect_size,p_value
+recovery_selection_precision,effectguard_minus_dependency_only,0.5206971677559952,0.5114621157104873,0.5271574679254457,1.0,0.0
+selected_invalidated_count,dependency_only_minus_effectguard,12.166666666666666,11.774382716049383,12.441975308641975,1.0,0.0
+unnecessary_selected_count,dependency_only_minus_effectguard,12.166666666666666,11.774382716049383,12.441975308641975,1.0,0.0
+unweighted_recovery_action_count,dependency_only_minus_effectguard,24.333333333333332,23.548765432098765,24.88395061728395,1.0,0.0
