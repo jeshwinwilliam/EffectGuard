@@ -4,6 +4,7 @@ import argparse
 from pathlib import Path
 from statistics import mean
 
+from .artifact_eval import evaluate_artifact
 from .experiment import ExperimentRunner, write_results
 from .models import FaultKind, TrialConfig
 
@@ -41,6 +42,9 @@ def build_parser() -> argparse.ArgumentParser:
     trials.add_argument("--dependency-density", default="canonical")
     trials.add_argument("--workflow-size", type=int, default=8)
 
+    artifact_eval = subparsers.add_parser("artifact-eval")
+    artifact_eval.add_argument("--output-dir", type=Path, required=True)
+
     return parser
 
 
@@ -67,6 +71,14 @@ def main(argv: list[str] | None = None) -> int:
         print(
             f"run={artifacts.metrics.run_id} strategy={artifacts.metrics.strategy} "
             f"correct={artifacts.metrics.final_state_correct} output={args.output_dir}"
+        )
+        return 0
+
+    if args.command == "artifact-eval":
+        result = evaluate_artifact(args.output_dir)
+        print(
+            f"artifact_status={result['status']} "
+            f"output={args.output_dir}"
         )
         return 0
 
