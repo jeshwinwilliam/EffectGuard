@@ -2,7 +2,12 @@
 
 EffectGuard is an original Python research prototype for studying a specific recovery problem in workflow systems: what should a runtime do when an external mutating call may already have committed, but the caller cannot confirm that yet?
 
-This repository implements the **P0 baseline experiment** only. It does **not** implement the future selective-recovery mechanism. That boundary is deliberate. The job of P0 is to make the failure mode visible, measurable, and reproducible before any smarter repair policy is introduced.
+This repository now has two clearly separated layers:
+
+- **P0**: the frozen experimental substrate and conventional recovery baselines
+- **P1**: the first candidate EffectGuard mechanism for assumption-aware selective recovery
+
+P1 is an experimental mechanism, not a proven result. It exists to test whether semantic validity and effect-aware recovery can preserve correctness while avoiding unnecessary replay.
 
 In plain language, the prototype simulates a situation where:
 
@@ -30,6 +35,48 @@ EffectGuard exists to make that distinction concrete with a deterministic simula
 - a blocking verification baseline can avoid opening the contradictory fallback branch
 
 The experiment is intentionally small enough to understand end to end, but strict enough to reflect a real systems problem rather than a toy retry example.
+
+## Repository Scope
+
+### P0
+
+P0 remains frozen and continues to provide the baseline experiment:
+
+- deterministic workflow execution
+- deterministic fault injection
+- virtual-clock timing for reproducible runs
+- separated runtime and oracle event logs
+- reservation, inventory, payment, and notification simulators
+- restart, checkpoint replay, and blocking verification baselines
+- invariant checking and run-level metrics
+- JSON, CSV, JSONL, and SVG outputs
+- deterministic pytest coverage
+
+P0 explicitly does not implement:
+
+- semantic validity analysis
+- selective recovery planning
+- effect-aware compensation planning
+- minimal semantic recovery-set computation
+
+### P1
+
+P1 adds the first candidate EffectGuard mechanism:
+
+- first-class assumption records
+- explicit validity evaluation
+- recovery plan construction
+- compensable recovery actions
+- a `dependency_only` ablation baseline
+- an `effectguard` candidate baseline
+- shipment-aware canonical recovery tests
+- failure-honest handling for unsupported irreversible recovery
+
+P1 still does not implement:
+
+- LLM-based semantic reasoning
+- automatic workflow meaning inference
+- claims of proven superiority or final validation
 
 ## P0 Scope
 
@@ -137,6 +184,51 @@ There are a few important architectural choices behind that layout:
 - `blocking` is implemented as a serious baseline, not a weak straw man. It waits on `UNKNOWN`, performs read-only verification, and retries a mutating call only after definite negative evidence.
 - `NotificationService` exists because the broader research substrate needs an irreversible side-effect example, but the canonical P0 contradiction stays focused on reservations so the behaviour is easier to reason about.
 
+## P1 Architecture
+
+P1 keeps the P0 runtime/oracle separation intact and adds assumption-aware tracking plus a deterministic recovery path. The oracle still evaluates correctness and semantic invalidation for experiments, but the runtime recovery logic must not read oracle-only truth.
+
+### P1 Architecture Diagram
+
+```mermaid
+flowchart TD
+    runtime["Workflow Runtime"] --> invoke["Tool Invocation"]
+    invoke --> unknown["Observed UNKNOWN"]
+    unknown --> assumptions["Assumption Store\nAssumptionRecord lifecycle"]
+    assumptions --> deps["Dependency Tracker\nDATA / CONTROL / ASSUMPTION"]
+    deps --> downstream["Continued Downstream Execution"]
+    downstream --> resolution["Late Resolution Through Normal Verification"]
+    resolution --> contradiction["Contradiction Detector"]
+    contradiction --> validity["Validity Evaluator\nDeterministic workload predicates"]
+    validity --> planner["Recovery Planner\nselected invalidated operations\npreserved operations\ncompensations / recomputation"]
+    planner --> compensate["Compensation Executor"]
+    planner --> recompute["Recompute / Revalidate Executor"]
+    compensate --> finalise["Recovered Runtime State"]
+    recompute --> finalise
+    finalise --> oracle["Invariant Oracle\nEvaluation only\nUnavailable to runtime recovery logic"]
+```
+
+### P1 Recovery Model
+
+The candidate mechanism distinguishes:
+
+- graph dependence
+- semantic invalidity
+
+That means a graph descendant is not automatically invalid. P1 uses deterministic workload-defined validity predicates to decide whether a previously executed operation still remains valid after late resolution.
+
+The current P1 strategy set is:
+
+- `blocking`
+- `restart`
+- `checkpoint`
+- `dependency_only`
+- `effectguard`
+
+`dependency_only` is the graph-based ablation.
+
+`effectguard` is the semantic and effect-aware candidate mechanism.
+
 ## Canonical Workflow
 
 The default workflow is a procurement scenario with one preferred supplier and one fallback supplier.
@@ -166,6 +258,17 @@ flowchart LR
 The fault is injected at `reserve_a`. In the canonical case, the reservation at Supplier A has really committed, but the runtime does not know that yet. A non-blocking strategy eventually assumes failure, chooses Supplier B, and creates a second reservation that should never have existed.
 
 That contradiction is the measured phenomenon.
+
+## P1 Canonical Recovery Interpretation
+
+For the shipment-enabled P1 workflow, the canonical contradiction means:
+
+- `choose_b` becomes invalid once `reserve_a` resolves to success
+- `reserve_b` becomes invalid because it exists only on the false fallback path
+- `create_shipment` becomes invalid for the same reason
+- `calculate_tax` remains valid and should be preserved
+
+In the selective descendant test, a graph descendant such as `record_audit` may remain semantically valid even though it sits below the contradicted assumption in the dependency graph. That case is used to test whether EffectGuard is genuinely more selective than a graph-only recovery rule.
 
 ## Recovery Baselines
 
@@ -272,6 +375,30 @@ python -m effectguard.cli pilot \
   --output-dir results/pilot-checkpoint
 ```
 
+### Dependency-only
+
+```bash
+python -m effectguard.cli pilot \
+  --strategy dependency_only \
+  --seed 42 \
+  --fault contradictory-late-resolution \
+  --failure-position reserve_a \
+  --uncertainty-ms 5000 \
+  --output-dir results/pilot-dependency-only
+```
+
+### EffectGuard
+
+```bash
+python -m effectguard.cli pilot \
+  --strategy effectguard \
+  --seed 42 \
+  --fault contradictory-late-resolution \
+  --failure-position reserve_a \
+  --uncertainty-ms 5000 \
+  --output-dir results/pilot-effectguard
+```
+
 ## Running A Trial Matrix
 
 ```bash
@@ -324,6 +451,23 @@ In P0, this denominator is an approximation based on the dependency graph, not a
 - graph descendant does not necessarily mean semantically invalid operation
 - P0 reports a useful structural baseline, not the final research definition
 - later phases must distinguish graph reachability from true semantic invalidation
+
+### Recovery Selection Precision And Recall
+
+These P1 metrics evaluate how accurately the planner selects invalid work compared with the oracle semantic invalidation set used only for evaluation.
+
+### Unaffected Preservation Rate
+
+This measures whether valid unaffected work stays preserved. In the canonical selective case, `calculate_tax` and other workload-defined valid descendants should remain preserved when possible.
+
+### Compensation Metrics
+
+P1 also tracks:
+
+- `compensation_count`
+- `compensation_failures`
+- `invalid_external_effects_remaining`
+- `unsupported_irreversible_effects`
 
 ### Recovery Latency
 
@@ -382,6 +526,13 @@ These boundaries matter for research integrity:
 - dependency descendants may be used for oracle analysis, but not for selective repair in P0
 - the experiment must remain deterministic
 - incorrect coarse-baseline outcomes must not be hidden by slipping in automatic compensation logic
+
+For P1:
+
+- runtime recovery must still not read oracle-only semantic ground truth
+- compensation must remain a new external action, not a magical undo
+- unsupported irreversible recovery must be reported honestly
+- a negative or mixed result is acceptable; a misleading positive result is not
 
 ## P0 Implementation Boundary
 

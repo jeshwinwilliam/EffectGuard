@@ -45,6 +45,40 @@ TODO for later research phases:
 - evaluate minimal affected subsets under resolved truth
 - keep that logic out of P0 runtime recovery behaviour
 
+## P1 scope note
+
+P1 adds the first candidate EffectGuard recovery mechanism while preserving frozen P0 behaviour.
+
+P1 includes:
+
+- assumption records and contradiction detection
+- deterministic validity evaluation
+- recovery-plan construction
+- graph-based selective recovery ablation via `dependency_only`
+- semantic and effect-aware candidate recovery via `effectguard`
+- compensable shipment-aware canonical recovery tests
+- honest failure handling for compensation failure and unsupported irreversible effects
+
+P1 does not yet include:
+
+- automatic semantic inference
+- LLM-driven recovery logic
+- final scientific claims of superiority
+- broad experimental validation across large workflow families
+
+## P1 scientific interpretation
+
+P1 should be treated as a candidate mechanism under test, not as a validated conclusion.
+
+The current branch is meant to answer questions such as:
+
+- can correctness be restored for supported canonical contradictions
+- can valid unaffected work be preserved
+- can the runtime stay isolated from oracle-only semantic truth
+- can unsupported irreversible cases fail honestly
+
+Those questions are narrower than a final paper claim.
+
 ## Deep-research provenance
 
 The implementation brief used for this artefact was prepared from a literature-guided requirements process. That provenance note is suitable for an artefact appendix, but it should not be treated as a publication claim or as evidence of code reuse from any external project.
