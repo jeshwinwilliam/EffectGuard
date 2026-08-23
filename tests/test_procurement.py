@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from p0_recovery_lab.models import DependencyKind, EffectClass
-from p0_recovery_lab.workflow.procurement import build_procurement_workflow
+from effectguard.models import DependencyKind, EffectClass
+from effectguard.workflow.procurement import build_procurement_workflow
 
 
 def test_workflow_contract() -> None:

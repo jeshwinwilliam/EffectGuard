@@ -14,7 +14,7 @@ def _fault_kind(value: str) -> FaultKind:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="python -m p0_recovery_lab.cli")
+    parser = argparse.ArgumentParser(prog="python -m effectguard.cli")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     pilot = subparsers.add_parser("pilot")

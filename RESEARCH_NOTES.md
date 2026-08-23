@@ -9,7 +9,7 @@ Conceptual references:
 1. *Verified Tool Calls Improve LLM Agent Reliability Under Non-Atomic Failures*, arXiv:2608.02645. Relevance: ambiguity after a mutating call, delayed visibility, verification before retry, idempotency, and controlled fault injection.
 2. LangGraph documentation on time travel and persistence. Relevance: checkpoint-style replay in which downstream nodes execute again without implying that external systems were rewound.
 
-This repository is not an implementation of either source, does not claim behavioural equivalence with them, and all code here was authored independently.
+This repository is not an implementation of either source, does not claim behavioural equivalence with them, and all code here was authored independently as EffectGuard.
 
 ## Deep-research provenance
 

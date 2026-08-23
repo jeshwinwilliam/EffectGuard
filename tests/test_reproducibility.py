@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import json
 
-from p0_recovery_lab.experiment import ExperimentRunner, create_environment, write_results
-from p0_recovery_lab.models import FaultKind, TrialConfig
+from effectguard.experiment import ExperimentRunner, create_environment, write_results
+from effectguard.models import FaultKind, TrialConfig
 
 
 def _config(strategy: str) -> TrialConfig:

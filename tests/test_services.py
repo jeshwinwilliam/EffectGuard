@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from p0_recovery_lab.clock import VirtualClock
-from p0_recovery_lab.models import FaultDecision, FaultKind, ObservedStatus, OperationContext, ToolResult
-from p0_recovery_lab.services.inventory import InventoryService
-from p0_recovery_lab.services.notification import NotificationService
-from p0_recovery_lab.services.payment import PaymentService
-from p0_recovery_lab.services.reservation import ReservationService
+from effectguard.clock import VirtualClock
+from effectguard.models import FaultDecision, FaultKind, ObservedStatus, OperationContext, ToolResult
+from effectguard.services.inventory import InventoryService
+from effectguard.services.notification import NotificationService
+from effectguard.services.payment import PaymentService
+from effectguard.services.reservation import ReservationService
 
 
 def _ctx(key: str = "reservation-key") -> OperationContext:

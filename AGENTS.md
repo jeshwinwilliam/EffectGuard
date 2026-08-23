@@ -1,6 +1,6 @@
-## P0 Recovery Lab agent notes
+## EffectGuard agent notes
 
-- P0 is intentionally a baseline-only simulator.
+- EffectGuard currently implements the P0 baseline-only simulator.
 - Do not add dependency-aware selective recovery unless a later phase explicitly asks for it.
 - Do not expose oracle truth to runtime or baseline code.
 - Do not reset or rewind external world state during restart or checkpoint recovery.

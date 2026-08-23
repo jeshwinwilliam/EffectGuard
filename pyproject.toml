@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "p0-recovery-lab"
+name = "EffectGuard"
 version = "0.1.0"
 description = "Deterministic recovery baseline simulator for ambiguous external effects"
 readme = "README.md"

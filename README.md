@@ -1,74 +1,283 @@
-# P0 Recovery Lab
+# EffectGuard
 
-P0 Recovery Lab is a deterministic Python prototype for studying ambiguous external effects in long-running workflow execution. It focuses on one narrow question: what happens when an external mutation really commits, the runtime first sees `UNKNOWN`, and coarse recovery strategies continue as if the mutation failed.
+EffectGuard is an original Python research prototype for studying a specific recovery problem in workflow systems: what should a runtime do when an external mutating call may already have committed, but the caller cannot confirm that yet?
 
-Selective recovery is intentionally **not** implemented in P0. This repository only compares three baseline policies:
+This repository implements the **P0 baseline experiment** only. It does **not** implement the future selective-recovery mechanism. That boundary is deliberate. The job of P0 is to make the failure mode visible, measurable, and reproducible before any smarter repair policy is introduced.
 
-- `blocking`: verify before taking downstream action.
-- `restart`: restart the runtime from the beginning after a contradiction is discovered.
-- `checkpoint`: replay the suffix after a checkpoint once the contradiction is discovered.
+In plain language, the prototype simulates a situation where:
 
-The point of the pilot is to show that restarting local execution is not the same as rewinding external state.
+1. a mutating external call really succeeds
+2. the runtime initially receives an ambiguous result such as `UNKNOWN`
+3. the mutation is temporarily invisible to read-based verification
+4. a coarse recovery policy assumes the operation failed
+5. downstream work continues under that assumption
+6. the earlier mutation later becomes visible as successful
+7. the runtime discovers that its earlier assumption was wrong
+8. restart-style recovery turns out not to be the same thing as rewinding external reality
 
-## Scope
+That last point is the central idea behind the repository.
 
-Included in P0:
+## Why EffectGuard Exists
 
-- deterministic virtual-clock simulator
-- runtime and oracle event streams kept separate
-- idempotent reservation, payment, and notification services
-- deterministic procurement workflow metadata
-- fault injection for ambiguous and partial effects
+In many discussions about orchestration and agent execution, restart, replay, and checkpoint restore are treated as broadly sufficient recovery tools. They are useful, but they are not magical. They can rebuild local runtime progress, yet they do not automatically undo a side effect that has already happened in an outside system.
+
+EffectGuard exists to make that distinction concrete with a deterministic simulator:
+
+- the runtime sees only observable tool outcomes
+- the oracle sees hidden ground truth
+- the simulated external services preserve committed state across restart and replay
+- idempotency prevents some duplicate damage, but not all logical inconsistency
+- a blocking verification baseline can avoid opening the contradictory fallback branch
+
+The experiment is intentionally small enough to understand end to end, but strict enough to reflect a real systems problem rather than a toy retry example.
+
+## P0 Scope
+
+### Included
+
+- deterministic workflow execution
+- deterministic fault injection
+- virtual-clock timing for reproducible runs
+- separated runtime and oracle event logs
+- reservation, inventory, payment, and notification simulators
+- restart, checkpoint replay, and blocking verification baselines
 - invariant checking and run-level metrics
 - JSON, CSV, JSONL, and SVG outputs
-- pytest coverage for faults, services, baselines, and reproducibility
+- deterministic pytest coverage
 
-Explicitly excluded from P0:
+### Explicitly Excluded
 
 - dependency-aware selective recovery
 - targeted compensation planning
+- invalidated-subgraph repair
+- descendant-only repair execution
 - LLM-generated workflows
-- LangGraph, Temporal, Kafka, Redis, PostgreSQL
-- FastAPI, Docker, cloud services, or network access
+- LangGraph, Temporal, Redis, Kafka, PostgreSQL
+- FastAPI, Docker, Kubernetes, and cloud deployment
+- network-dependent execution paths
 
-## Architecture
+If you are reading this for a paper, project review, or portfolio, the right interpretation is: **this repository establishes the baseline phenomenon and the baseline comparison, not the final proposed solution**.
 
-The runtime sees only observable tool results. The oracle holds hidden ground truth and evaluates correctness after the run. That separation matters because a timeout can leave the external world mutated even when the runtime remains uncertain.
+## System Architecture
 
-`VirtualClock` drives simulation latency without `sleep()`. Real wall-clock timing is used only to measure bookkeeping overhead with `perf_counter_ns`, which is descriptive rather than a benchmark claim.
+The architecture is built around one rule that should never be broken: **the runtime must not see oracle truth**.
+
+That means the simulator models two views of the same world:
+
+- the **runtime view**, which receives only observable outcomes such as `SUCCESS`, `FAILURE`, `UNKNOWN`, or `PARTIAL`
+- the **oracle view**, which sees the hidden committed state of the simulated external world and evaluates whether the final result is logically correct
+
+This split is what makes the ambiguity meaningful. If the runtime could inspect actual hidden state directly, the experiment would stop being a recovery problem and collapse into a direct truth lookup.
+
+### Architecture Diagram
+
+```text
+                                                  EffectGuard
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                Experiment Driver                                                         │
+│                                       cli.py  ->  experiment.py  ->  TrialConfig                                         │
+│                                                                                                                            │
+│  Inputs: strategy, seed, fault kind, failure position, uncertainty duration, output path                                  │
+│  Outputs: per-run metrics, grouped summaries, runtime logs, oracle logs, SVG plots                                        │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+                                                       │
+                                                       │ creates
+                                                       v
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                              Deterministic Runtime Shell                                                  │
+│                                                                                                                            │
+│  VirtualClock          RuntimeState            FaultInjector               EventLog(runtime)                               │
+│  - simulated time      - attempts              - applies configured        - records only what the runtime could know      │
+│  - no sleep()          - assumptions             fault at op/attempt       - no actual hidden state                         │
+│  - fast reproducible   - uncertainty records   - controls visibility      - used for reproducibility tests                 │
+│                        - replay counters         delays / ambiguity                                                           │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+                                                       │
+                                                       │ executes workflow operations through baseline strategy
+                                                       v
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                Baseline Strategy Layer                                                    │
+│                                                                                                                            │
+│  restart.py                              checkpoint.py                             blocking.py                             │
+│  - reruns from start                     - replays suffix after checkpoint        - polls read-only verification           │
+│  - keeps external world intact           - keeps external world intact            - waits through UNKNOWN if needed        │
+│  - can still leave stale side effects    - can still leave stale side effects     - retries mutating call only after       │
+│                                                                                      definitive negative verification      │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+                                                       │
+                                                       │ calls
+                                                       v
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                  Workflow Definition                                                      │
+│                                           workflow/procurement.py + models.py                                             │
+│                                                                                                                            │
+│  check_a_stock --> reserve_a --> [uncertainty may begin here] --> choose_b --> reserve_b --> build_procurement_plan       │
+│          └──────────────┐                          │                                ▲                                       │
+│                         └────────────> calculate_tax ───────────────────────────────┘                                       │
+│                                                                                                                            │
+│  Metadata carried with the workflow:                                                                                       │
+│  - effect class                                                                                                            │
+│  - service + method                                                                                                        │
+│  - data dependencies                                                                                                       │
+│  - assumption dependencies                                                                                                 │
+│  - checkpoint placement                                                                                                    │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+                                                       │
+                                                       │ talks to
+                                                       v
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                              Simulated External Services                                                  │
+│                                                                                                                            │
+│  InventoryService            ReservationService                PaymentService             NotificationService               │
+│  - stock counts              - idempotent reserve/verify       - idempotent auth         - idempotent send                │
+│  - reserved arithmetic       - delayed visibility              - future substrate         - irreversible example           │
+│  - conservation checks       - partial mutation path             continuity                 continuity                     │
+│                              - external state persists across restart/replay                                                 │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+                                                       │
+                      ┌────────────────────────────────┴────────────────────────────────┐
+                      │                                                                 │
+                      │ runtime can observe only ToolResult                             │ oracle sees hidden ground truth
+                      v                                                                 v
+┌────────────────────────────────────────────────────────────────┐       ┌──────────────────────────────────────────────────┐
+│                         Runtime View                           │       │                   Oracle View                     │
+│                                                                │       │                                                      │
+│  ToolResult                                                    │       │  oracle.py                                          │
+│  - observed_status                                             │       │  - snapshots real reservation/inventory state       │
+│  - value                                                       │       │  - checks invariants                                │
+│  - error                                                       │       │  - counts duplicate actual effects                  │
+│  - retryable                                                   │       │  - computes denominator for recovery amplification  │
+│                                                                │       │                                                      │
+│  Crucial limitation: no actual_status field, no hidden truth   │       │  EventLog(oracle) stores harness-only snapshots     │
+└────────────────────────────────────────────────────────────────┘       └──────────────────────────────────────────────────┘
+                      │                                                                 │
+                      └────────────────────────────────┬────────────────────────────────┘
+                                                       │
+                                                       │ exported by experiment runner
+                                                       v
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                     Result Artefacts                                                       │
+│                                                                                                                            │
+│  config.json   runs.csv / runs.json   summary.csv / summary.json   events/*.jsonl   plots/*.svg                           │
+│                                                                                                                            │
+│  These files capture strategy behaviour, correctness, replay cost, verification cost, and output summaries.               │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### How To Read The Diagram
+
+There are a few important architectural choices behind that layout:
+
+- `VirtualClock` exists so uncertainty windows of hundreds or thousands of milliseconds can be explored without making tests or experiments sleep in real time.
+- `ReservationService` is where the main ambiguity lives. It can commit a mutation, hide that mutation temporarily, and later reveal it through verification reads.
+- `restart` and `checkpoint` are intentionally realistic in one specific sense: they can recover local runtime progress, but they do not silently roll back the external world.
+- `blocking` is implemented as a serious baseline, not a weak straw man. It waits on `UNKNOWN`, performs read-only verification, and retries a mutating call only after definite negative evidence.
+- `NotificationService` exists because the broader research substrate needs an irreversible side-effect example, but the canonical P0 contradiction stays focused on reservations so the behaviour is easier to reason about.
+
+## Canonical Workflow
+
+The default workflow is a procurement scenario with one preferred supplier and one fallback supplier.
+
+### Operation Graph
+
+```text
+check_a_stock
+    |
+    v
+reserve_a -----> choose_b -----> reserve_b -----> build_procurement_plan
+    |                                   ^
+    |                                   |
+    └----------> calculate_tax ---------┘
+```
+
+### What Each Operation Means
+
+- `check_a_stock`: read Supplier A inventory
+- `reserve_a`: reserve the required quantity from Supplier A
+- `calculate_tax`: pure deterministic work, independent from the reservation ambiguity
+- `choose_b`: choose fallback Supplier B if the runtime assumes `reserve_a` failed
+- `reserve_b`: reserve stock from the fallback supplier
+- `build_procurement_plan`: build the final output view
+
+### Why This Workflow Was Chosen
+
+The fault is injected at `reserve_a`. In the canonical case, the reservation at Supplier A has really committed, but the runtime does not know that yet. A non-blocking strategy eventually assumes failure, chooses Supplier B, and creates a second reservation that should never have existed.
+
+That contradiction is the measured phenomenon.
+
+## Recovery Baselines
+
+### Blocking Verification
+
+This baseline waits when the outcome is ambiguous. It performs read-only verification and continues polling while the result remains `UNKNOWN`. If verification eventually shows success, the workflow continues without opening the fallback branch. If verification eventually shows definite failure, the mutating operation may be retried using the same stable idempotency key.
+
+This strategy is expected to finish in a correct final state for the canonical contradictory case.
+
+### Full Restart
+
+This baseline allows the workflow to move forward after assuming failure. Once the earlier contradiction becomes visible, the runtime restarts from the beginning. The important limitation is that restarting the runtime does not remove previously created external effects.
+
+Stable idempotency keys stop Supplier A from being physically reserved twice, but they do not automatically remove the already-created Supplier B reservation.
+
+This strategy is expected to finish in an incorrect final state for the canonical contradictory case.
+
+### Checkpoint Replay
+
+This baseline restores local progress after a checkpoint and replays only the suffix. It avoids re-executing some earlier deterministic work, but it still cannot rewind external state that already changed before replay began.
+
+Like full restart, it avoids physically duplicating the original Supplier A reservation through idempotency, but it still leaves the earlier fallback reservation behind.
+
+This strategy is also expected to finish in an incorrect final state for the canonical contradictory case.
+
+## Fault Model
+
+The simulator currently supports four fault patterns:
+
+- `timeout-after-commit`
+- `delayed-visibility`
+- `partial-mutation`
+- `contradictory-late-resolution`
+
+The most important one for EffectGuard's baseline study is `contradictory-late-resolution`. It combines:
+
+- a real committed mutation
+- an initial `UNKNOWN` observation
+- a visibility delay
+- an assumption window in which non-blocking strategies may take the wrong downstream path
+- a later positive verification result that contradicts the earlier assumption
 
 ## Repository Layout
 
-- `p0_recovery_lab/models.py`: shared enums, dataclasses, workflow models, and trial metrics
-- `p0_recovery_lab/clock.py`: deterministic virtual time
-- `p0_recovery_lab/eventlog.py`: runtime and oracle JSONL event logging
-- `p0_recovery_lab/faults.py`: deterministic fault plan selection
-- `p0_recovery_lab/services/`: inventory, reservation, payment, and notification simulators
-- `p0_recovery_lab/workflow/`: workflow metadata and stable idempotency-key generation
-- `p0_recovery_lab/baselines/`: restart, checkpoint, and blocking policies
-- `p0_recovery_lab/oracle.py`: hidden-state snapshots and invariant checks
-- `p0_recovery_lab/metrics.py`: run and summary metric helpers
-- `p0_recovery_lab/plotting.py`: dependency-free SVG output
-- `p0_recovery_lab/experiment.py`: trial harness and result export
-- `p0_recovery_lab/cli.py`: `pilot` and `trials` commands
-- `tests/`: deterministic test suite
+- `effectguard/models.py`: enums, dataclasses, workflow and result models
+- `effectguard/clock.py`: deterministic virtual time
+- `effectguard/eventlog.py`: runtime and oracle event log handling
+- `effectguard/faults.py`: fault-plan selection
+- `effectguard/oracle.py`: ground-truth snapshots and invariant checks
+- `effectguard/metrics.py`: run and summary metric helpers
+- `effectguard/plotting.py`: standalone SVG plot generation
+- `effectguard/experiment.py`: trial harness and artefact export
+- `effectguard/cli.py`: command-line entry point
+- `effectguard/services/`: inventory, reservation, payment, and notification simulators
+- `effectguard/workflow/`: stable idempotency keys and procurement workflow metadata
+- `effectguard/baselines/`: restart, checkpoint, and blocking policies
+- `tests/`: deterministic unit and behavioural tests
 
-## Prerequisites
+## Python Version And Setup
 
-Python 3.10 or newer.
-
-## Setup
+Use Python 3.10 or newer.
 
 ```bash
 python -m venv .venv
 python -m pip install -e ".[dev]"
-pytest -q
+python -m pytest -q
 ```
 
-## Pilot Commands
+## Running The Canonical Pilot
+
+### Blocking
 
 ```bash
-python -m p0_recovery_lab.cli pilot \
+python -m effectguard.cli pilot \
   --strategy blocking \
   --seed 42 \
   --fault contradictory-late-resolution \
@@ -77,8 +286,10 @@ python -m p0_recovery_lab.cli pilot \
   --output-dir results/pilot-blocking
 ```
 
+### Restart
+
 ```bash
-python -m p0_recovery_lab.cli pilot \
+python -m effectguard.cli pilot \
   --strategy restart \
   --seed 42 \
   --fault contradictory-late-resolution \
@@ -87,8 +298,10 @@ python -m p0_recovery_lab.cli pilot \
   --output-dir results/pilot-restart
 ```
 
+### Checkpoint
+
 ```bash
-python -m p0_recovery_lab.cli pilot \
+python -m effectguard.cli pilot \
   --strategy checkpoint \
   --seed 42 \
   --fault contradictory-late-resolution \
@@ -97,10 +310,10 @@ python -m p0_recovery_lab.cli pilot \
   --output-dir results/pilot-checkpoint
 ```
 
-## Multi-trial Command
+## Running A Trial Matrix
 
 ```bash
-python -m p0_recovery_lab.cli trials \
+python -m effectguard.cli trials \
   --strategies restart checkpoint blocking \
   --trials 30 \
   --base-seed 42 \
@@ -110,58 +323,119 @@ python -m p0_recovery_lab.cli trials \
   --output-dir results/p0-matrix
 ```
 
+The matrix runner reuses the same seed across strategies for each paired configuration. That keeps the comparison focused on recovery policy rather than accidental differences in generated conditions.
+
 ## Result Files
 
 Each output directory contains:
 
-- `config.json`: full run configuration
-- `runs.csv` and `runs.json`: one row per run
-- `summary.csv` and `summary.json`: grouped aggregates by strategy, fault, failure position, and uncertainty duration
-- `events/*.runtime.jsonl`: runtime-visible events only
-- `events/*.oracle.jsonl`: oracle-only snapshots
-- `plots/*.svg`: dependency-free summary charts
+- `config.json`: the full configuration used for the run set
+- `runs.csv`: one row per run for spreadsheet-style inspection
+- `runs.json`: the same run-level information in JSON form
+- `summary.csv`: grouped aggregates by strategy and configuration
+- `summary.json`: grouped aggregate metrics in JSON form
+- `events/<run-id>.runtime.jsonl`: runtime-visible events only
+- `events/<run-id>.oracle.jsonl`: harness-only ground-truth snapshots
+- `plots/final_state_correctness.svg`
+- `plots/recovery_amplification.svg`
+- `plots/recovery_latency.svg`
+- `plots/repeated_external_calls.svg`
 
-Generated `results/` content should not be committed.
+Generated `results/` content is experimental output and should not be committed.
 
-## Metrics
+## Metrics Explained
 
-- `final_state_correct`: whether oracle invariants hold
-- `duplicate_effects`: repeated actual side effects, not repeated attempts alone
-- `recovery_amplification`: replayed runtime work divided by the oracle recovery denominator
-- `recovery_latency_ms`: terminal virtual time
-- `late_recovery_latency_ms`: contradiction-to-terminal latency when applicable
-- `repeated_external_calls`: repeated logical service calls
-- `verification_reads`: read-only verification polls
-- `instrumentation_ns` and `instrumentation_pct`: bookkeeping overhead measurements
+### Final State Correctness
 
-## Canonical Expected Result
+Whether the oracle invariants hold when the run ends.
 
-For `contradictory-late-resolution` on `reserve_a` with `--uncertainty-ms 5000`:
+### Duplicate Effects
 
-- `blocking` waits and verifies, eventually observes Supplier A, never creates Supplier B, and finishes correct.
-- `restart` first creates Supplier B under a false assumption, later restarts, does not reapply A physically because the idempotency key is stable, but still leaves the old B reservation in the external world, so the final state is incorrect.
-- `checkpoint` behaves similarly to restart except the replay begins after `check_a_stock`, so the old B reservation still survives and the final state is incorrect.
+How many actual external side effects were physically duplicated. This is stricter than counting repeated attempts, because retries that reuse the same idempotency key may repeat a call without repeating the real effect.
 
-Those incorrect restart and checkpoint outcomes are expected data, not implementation defects in P0.
+### Recovery Amplification
 
-## Reproducibility
+How much extra runtime work a strategy performed relative to the oracle analysis denominator derived from the affected workflow region.
 
-- every run uses deterministic IDs and a fixed workflow instance per seed
-- `VirtualClock` replaces real waiting
-- strategies in a trial matrix reuse the same seed for paired comparisons
-- runtime and oracle logs are written separately
-- the test suite checks same-seed trace equality after excluding variable wall-clock instrumentation fields
+### Recovery Latency
 
-## Adjusting the Experiment
+Virtual time from the start of the run until the workflow reaches a terminal state.
 
-Change ambiguity duration with `--uncertainty-ms`. Change the targeted operation with `--failure-position`. P0 ships with `reserve_a` as the canonical contradictory case.
+### Late Recovery Latency
+
+Virtual time from contradiction detection until the workflow reaches its terminal state.
+
+### Repeated External Calls
+
+How many service invocations reused a logical external call identity already seen earlier in the same run.
+
+### Verification Reads
+
+How many read-only verification checks the strategy performed. This is tracked separately so the cost of safer behaviour remains visible.
+
+### Instrumentation Overhead
+
+Bookkeeping overhead measured with `perf_counter_ns`. This is descriptive microbenchmark data, not a platform-independent performance claim.
+
+## Expected Canonical Outcome
+
+For:
+
+- fault = `contradictory-late-resolution`
+- failure position = `reserve_a`
+- uncertainty duration = `5000`
+
+the expected qualitative outcome is:
+
+- `blocking`: waits, verifies, keeps only Supplier A, and ends correct
+- `restart`: creates Supplier B under a false assumption, later restarts, preserves the already-mutated external world, and ends incorrect
+- `checkpoint`: creates Supplier B, replays the suffix after contradiction, preserves the already-mutated external world, and ends incorrect
+
+If restart and checkpoint finish in an incorrect state in this scenario, that is not a defect in the prototype. It is the result P0 is designed to expose.
+
+## Reproducibility Approach
+
+This repository is designed to be repeatable:
+
+- deterministic workflow instance IDs are used in the experiment path
+- stable SHA-256 idempotency keys are derived from canonical JSON
+- built-in `hash()` is not used for persistent logical identifiers
+- global random state is avoided
+- virtual time replaces real waiting
+- runtime and oracle traces are separated
+- tests check same-seed behaviour after excluding inherently noisy wall-clock overhead fields
+
+## Design Boundaries That Must Stay Intact
+
+These boundaries matter for research integrity:
+
+- the runtime must not read oracle truth
+- restart and checkpoint must not secretly reset the external world
+- dependency descendants may be used for oracle analysis, but not for selective repair in P0
+- the experiment must remain deterministic
+- incorrect coarse-baseline outcomes must not be hidden by slipping in automatic compensation logic
 
 ## Limitations
 
-- P0 does not prove the later selective-recovery hypothesis
-- the procurement workflow is intentionally tiny
-- only a narrow set of fault patterns is simulated
-- payment and notification services are present for substrate continuity, but the pilot branch centres on reservations
-- SVG plots are plain research summaries, not publication graphics
+- the workflow is intentionally narrow
+- the simulator is not a production orchestrator
+- the prototype does not claim behavioural equivalence with any external framework
+- payment and notification services are present mainly to establish future substrate continuity
+- the SVG plots are simple research summaries rather than publication graphics
+- P0 does not prove the eventual selective-recovery hypothesis
 
-No paid API, external service, or network access is required.
+## Research Integrity Note
+
+This README and the implementation in this repository were written from the project requirements in this codebase and authored in original wording. The design is informed by distributed-systems ideas and research concepts, but the prose, code, diagrams, and explanations here are written specifically for this repository rather than copied from an external paper, framework, or tutorial.
+
+## Quick Next Steps
+
+If you have just cloned the repository, the easiest next sequence is:
+
+1. create the virtual environment
+2. install the development dependency set
+3. run the test suite
+4. run the three canonical pilot commands
+5. compare the resulting `summary.json` and SVG plots
+
+That path gives you both a correctness check and a concrete feel for what the three baselines are actually doing.

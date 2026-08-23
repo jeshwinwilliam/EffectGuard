@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from p0_recovery_lab.clock import VirtualClock
-from p0_recovery_lab.metrics import compute_recovery_amplification
-from p0_recovery_lab.models import FaultDecision, FaultKind, OperationContext
-from p0_recovery_lab.oracle import Oracle
-from p0_recovery_lab.services.inventory import InventoryService
-from p0_recovery_lab.services.reservation import ReservationService
-from p0_recovery_lab.workflow.procurement import build_procurement_workflow
+from effectguard.clock import VirtualClock
+from effectguard.metrics import compute_recovery_amplification
+from effectguard.models import FaultDecision, FaultKind, OperationContext
+from effectguard.oracle import Oracle
+from effectguard.services.inventory import InventoryService
+from effectguard.services.reservation import ReservationService
+from effectguard.workflow.procurement import build_procurement_workflow
 
 
 def _oracle_world():
