@@ -18,6 +18,7 @@ class ObservedStatus(str, Enum):
     FAILURE = "FAILURE"
     UNKNOWN = "UNKNOWN"
     PARTIAL = "PARTIAL"
+    PENDING = "PENDING"
 
 
 class ActualStatus(str, Enum):
@@ -47,6 +48,36 @@ class FaultPoint(str, Enum):
     AFTER_FIRST_MUTATION = "AFTER_FIRST_MUTATION"
     AFTER_COMMIT = "AFTER_COMMIT"
     ON_READ = "ON_READ"
+
+
+class ValidityResult(str, Enum):
+    VALID = "VALID"
+    INVALID = "INVALID"
+    UNKNOWN = "UNKNOWN"
+
+
+class AssumptionStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    RESOLVED_MATCH = "RESOLVED_MATCH"
+    RESOLVED_CONTRADICTION = "RESOLVED_CONTRADICTION"
+
+
+class RecoveryStatus(str, Enum):
+    NOT_NEEDED = "NOT_NEEDED"
+    RECOVERED = "RECOVERED"
+    RECOVERY_UNSUPPORTED = "RECOVERY_UNSUPPORTED"
+    RECOVERY_UNSAFE = "RECOVERY_UNSAFE"
+    RECOVERY_FAILED = "RECOVERY_FAILED"
+
+
+class RecoveryActionType(str, Enum):
+    PRESERVE = "PRESERVE"
+    REVALIDATE = "REVALIDATE"
+    RECOMPUTE = "RECOMPUTE"
+    REVERSE = "REVERSE"
+    COMPENSATE = "COMPENSATE"
+    REEXECUTE = "REEXECUTE"
+    BLOCK_UNSUPPORTED = "BLOCK_UNSUPPORTED"
 
 
 @dataclass(frozen=True)
@@ -231,6 +262,57 @@ class NotificationView:
 
 
 @dataclass(frozen=True)
+class ShipmentView:
+    shipment_id: str
+    supplier_id: str
+    sku: str
+    quantity: int
+    status: str
+
+
+@dataclass
+class AssumptionRecord:
+    assumption_id: str
+    uncertainty_id: str
+    source_operation_id: str
+    observed_state: ObservedStatus
+    assumed_state: ObservedStatus
+    created_at_virtual_time_ms: int
+    resolution_state: ObservedStatus | None = None
+    resolved_at_virtual_time_ms: int | None = None
+    status: AssumptionStatus = AssumptionStatus.ACTIVE
+
+
+@dataclass(frozen=True)
+class ValidityEvaluation:
+    operation_id: str
+    result: ValidityResult
+    reason: str
+
+
+@dataclass(frozen=True)
+class RecoveryAction:
+    action_type: RecoveryActionType
+    operation_id: str
+    target_supplier_id: str | None = None
+    reason: str = ""
+    idempotency_key: str | None = None
+
+
+@dataclass(frozen=True)
+class RecoveryPlan:
+    contradiction_id: str
+    invalidated_operations: tuple[str, ...]
+    preserved_operations: tuple[str, ...]
+    validation_operations: tuple[str, ...]
+    compensation_actions: tuple[RecoveryAction, ...]
+    recomputation_actions: tuple[RecoveryAction, ...]
+    unsupported_operations: tuple[str, ...]
+    selected_invalidated_operations: tuple[str, ...]
+    reasoning: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class TrialConfig:
     strategy: str
     seed: int
@@ -239,6 +321,7 @@ class TrialConfig:
     failure_position: str
     uncertainty_duration_ms: int
     output_dir: str
+    workflow_variant: str = "auto"
 
 
 @dataclass(frozen=True)
@@ -262,6 +345,28 @@ class TrialMetrics:
     contradiction_detected: bool
     instrumentation_ns: int
     instrumentation_pct: float
+    recovery_status: str | None = None
+    semantic_invalidated_operations: tuple[str, ...] = ()
+    selected_invalidated_operations: tuple[str, ...] = ()
+    recovery_selection_precision: float | None = None
+    recovery_selection_recall: float | None = None
+    unaffected_preservation_rate: float | None = None
+    compensation_count: int = 0
+    compensation_failures: int = 0
+    operations_recomputed: int = 0
+    operations_revalidated: int = 0
+    invalid_external_effects_remaining: int = 0
+    unsupported_irreversible_effects: int = 0
+    graph_recovery_amplification: float | None = None
+    semantic_recovery_amplification: float | None = None
+    recovery_virtual_latency: int | None = None
+    total_virtual_completion_time: int | None = None
+    uncertainty_wait_time: int = 0
+    dependency_records_created: int = 0
+    assumption_records_created: int = 0
+    event_count: int = 0
+    planner_wall_time_ns: int = 0
+    tracking_wall_time_ns: int = 0
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)
@@ -274,6 +379,7 @@ class InvariantResult:
     graph_affected_operations: int
     affected_operations: tuple[str, ...]
     unaffected_operations: tuple[str, ...]
+    semantic_invalidated_operations: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

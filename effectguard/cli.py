@@ -16,9 +16,10 @@ def _fault_kind(value: str) -> FaultKind:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="python -m effectguard.cli")
     subparsers = parser.add_subparsers(dest="command", required=True)
+    strategies = ["restart", "checkpoint", "blocking", "dependency_only", "effectguard"]
 
     pilot = subparsers.add_parser("pilot")
-    pilot.add_argument("--strategy", choices=["restart", "checkpoint", "blocking"], required=True)
+    pilot.add_argument("--strategy", choices=strategies, required=True)
     pilot.add_argument("--seed", type=int, required=True)
     pilot.add_argument("--fault", type=_fault_kind, required=True)
     pilot.add_argument("--failure-position", required=True)
@@ -26,7 +27,7 @@ def build_parser() -> argparse.ArgumentParser:
     pilot.add_argument("--output-dir", type=Path, required=True)
 
     trials = subparsers.add_parser("trials")
-    trials.add_argument("--strategies", nargs="+", choices=["restart", "checkpoint", "blocking"], required=True)
+    trials.add_argument("--strategies", nargs="+", choices=strategies, required=True)
     trials.add_argument("--trials", type=int, required=True)
     trials.add_argument("--base-seed", type=int, required=True)
     trials.add_argument("--fault", type=_fault_kind, required=True)

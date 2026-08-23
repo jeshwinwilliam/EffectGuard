@@ -7,7 +7,7 @@ from statistics import mean
 from time import perf_counter_ns
 from typing import Sequence
 
-from .baselines import run_blocking, run_checkpoint, run_restart
+from .baselines import run_blocking, run_checkpoint, run_dependency_only, run_effectguard, run_restart
 from .baselines.base import RunEnvironment, build_run_id
 from .clock import VirtualClock
 from .eventlog import EventLog
@@ -19,7 +19,8 @@ from .services.inventory import InventoryService
 from .services.notification import NotificationService
 from .services.payment import PaymentService
 from .services.reservation import ReservationService
-from .workflow.procurement import build_procurement_workflow
+from .services.shipment import ShipmentService
+from .workflow.procurement import build_procurement_p1_workflow, build_procurement_workflow
 
 
 def create_environment(config: TrialConfig) -> RunEnvironment:
@@ -30,10 +31,18 @@ def create_environment(config: TrialConfig) -> RunEnvironment:
     inventory.seed(supplier_id="A", sku="SKU-1", on_hand=10)
     inventory.seed(supplier_id="B", sku="SKU-1", on_hand=10)
     reservations = ReservationService(inventory=inventory, clock=clock)
+    shipments = ShipmentService()
     payments = PaymentService()
     notifications = NotificationService()
-    workflow = build_procurement_workflow()
-    oracle = Oracle(inventory=inventory, reservations=reservations, workflow=workflow, required_quantity=3)
+    use_p1 = config.workflow_variant == "p1" or config.strategy in {"dependency_only", "effectguard"}
+    workflow = build_procurement_p1_workflow() if use_p1 else build_procurement_workflow()
+    oracle = Oracle(
+        inventory=inventory,
+        reservations=reservations,
+        shipments=shipments,
+        workflow=workflow,
+        required_quantity=3,
+    )
     return RunEnvironment(
         config=config,
         clock=clock,
@@ -41,9 +50,11 @@ def create_environment(config: TrialConfig) -> RunEnvironment:
         oracle_log=oracle_log,
         inventory=inventory,
         reservations=reservations,
+        shipments=shipments,
         payments=payments,
         notifications=notifications,
         oracle=oracle,
+        workflow=workflow,
     )
 
 
@@ -57,10 +68,43 @@ class ExperimentRunner:
             run_restart(env)
         elif config.strategy == "checkpoint":
             run_checkpoint(env)
+        elif config.strategy == "dependency_only":
+            run_dependency_only(env)
+        elif config.strategy == "effectguard":
+            run_effectguard(env)
         else:
             raise ValueError(f"unknown strategy {config.strategy}")
         wall_ns = perf_counter_ns() - started_ns
-        invariant = env.oracle.evaluate(final_plan=env.final_plan, failure_position=config.failure_position)
+        invariant = env.oracle.evaluate(
+            final_plan=env.final_plan,
+            failure_position=config.failure_position,
+            contradiction_detected=env.contradiction_detected,
+        )
+        semantic_invalidated = invariant.semantic_invalidated_operations
+        selected = env.selected_invalidated_operations
+        correctly_selected = len(set(selected) & set(semantic_invalidated))
+        precision = None if not selected else correctly_selected / len(selected)
+        recall = None if not semantic_invalidated else correctly_selected / len(semantic_invalidated)
+        unaffected = set(invariant.unaffected_operations)
+        preserved = set(env.preserved_operations) & unaffected
+        unaffected_preservation = None if not unaffected else len(preserved) / len(unaffected)
+        graph_amp = compute_recovery_amplification(
+            runtime_replayed_operations=env.replayed_operations + env.compensation_count + env.operations_revalidated,
+            graph_affected_operations=invariant.graph_affected_operations,
+        )
+        semantic_amp = compute_recovery_amplification(
+            runtime_replayed_operations=env.replayed_operations + env.compensation_count + env.operations_revalidated,
+            graph_affected_operations=len(semantic_invalidated),
+        )
+        invalid_external_effects_remaining = 0
+        if env.contradiction_detected:
+            invalid_external_effects_remaining = sum(
+                1 for record in env.oracle.snapshot().reservations
+                if record["supplier_id"] == "B" and record["status"] == "ACTIVE"
+            ) + sum(
+                1 for shipment in env.oracle.snapshot().shipments
+                if shipment["supplier_id"] == "B" and shipment["status"] == "ACTIVE"
+            )
         metrics = TrialMetrics(
             run_id=build_run_id(config),
             strategy=config.strategy,
@@ -70,10 +114,7 @@ class ExperimentRunner:
             uncertainty_duration_ms=config.uncertainty_duration_ms,
             final_state_correct=invariant.ok,
             duplicate_effects=env.oracle.duplicate_effects(),
-            recovery_amplification=compute_recovery_amplification(
-                runtime_replayed_operations=env.replayed_operations,
-                graph_affected_operations=invariant.graph_affected_operations,
-            ),
+            recovery_amplification=graph_amp,
             graph_affected_operations=invariant.graph_affected_operations,
             recovery_latency_ms=env.clock.peek(),
             late_recovery_latency_ms=env.late_recovery_latency_ms,
@@ -84,6 +125,28 @@ class ExperimentRunner:
             contradiction_detected=env.contradiction_detected,
             instrumentation_ns=env.runtime.instrumentation_ns,
             instrumentation_pct=(env.runtime.instrumentation_ns / wall_ns * 100) if wall_ns else 0.0,
+            recovery_status=env.recovery_status.value if env.recovery_status else None,
+            semantic_invalidated_operations=semantic_invalidated,
+            selected_invalidated_operations=selected,
+            recovery_selection_precision=precision,
+            recovery_selection_recall=recall,
+            unaffected_preservation_rate=unaffected_preservation,
+            compensation_count=env.compensation_count,
+            compensation_failures=env.compensation_failures,
+            operations_recomputed=env.operations_recomputed,
+            operations_revalidated=env.operations_revalidated,
+            invalid_external_effects_remaining=invalid_external_effects_remaining,
+            unsupported_irreversible_effects=env.unsupported_irreversible_effects,
+            graph_recovery_amplification=graph_amp,
+            semantic_recovery_amplification=semantic_amp,
+            recovery_virtual_latency=env.recovery_virtual_latency,
+            total_virtual_completion_time=env.clock.peek(),
+            uncertainty_wait_time=env.uncertainty_wait_time,
+            dependency_records_created=env.dependency_records_created,
+            assumption_records_created=env.assumption_records_created,
+            event_count=len(env.runtime_log.events()),
+            planner_wall_time_ns=env.planner_wall_time_ns,
+            tracking_wall_time_ns=env.tracking_wall_time_ns,
         )
         return RunArtifacts(
             runtime_events=env.runtime_log.events(),

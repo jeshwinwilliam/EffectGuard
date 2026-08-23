@@ -6,6 +6,7 @@ from effectguard.models import FaultDecision, FaultKind, OperationContext
 from effectguard.oracle import Oracle
 from effectguard.services.inventory import InventoryService
 from effectguard.services.reservation import ReservationService
+from effectguard.services.shipment import ShipmentService
 from effectguard.workflow.procurement import build_procurement_workflow
 
 
@@ -14,9 +15,11 @@ def _oracle_world():
     inventory.seed(supplier_id="A", sku="SKU-1", on_hand=10)
     inventory.seed(supplier_id="B", sku="SKU-1", on_hand=10)
     reservations = ReservationService(inventory=inventory, clock=VirtualClock())
+    shipments = ShipmentService()
     oracle = Oracle(
         inventory=inventory,
         reservations=reservations,
+        shipments=shipments,
         workflow=build_procurement_workflow(),
         required_quantity=3,
     )

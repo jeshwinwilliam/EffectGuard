@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from time import perf_counter_ns
 
 from ..clock import VirtualClock
 from ..eventlog import EventLog
 from ..faults import FaultInjector
 from ..models import (
+    AssumptionRecord,
+    AssumptionStatus,
     FaultKind,
     ObservedStatus,
+    RecoveryStatus,
     TrialConfig,
     UncertaintyRecord,
 )
@@ -16,8 +20,9 @@ from ..services.inventory import InventoryService
 from ..services.notification import NotificationService
 from ..services.payment import PaymentService
 from ..services.reservation import ReservationService
+from ..services.shipment import ShipmentService
 from ..workflow.engine import RuntimeState, stable_sha256_key
-from ..workflow.procurement import build_procurement_workflow
+from ..workflow.procurement import build_procurement_p1_workflow, build_procurement_workflow
 
 
 @dataclass
@@ -28,10 +33,11 @@ class RunEnvironment:
     oracle_log: EventLog
     inventory: InventoryService
     reservations: ReservationService
+    shipments: ShipmentService
     payments: PaymentService
     notifications: NotificationService
     oracle: Oracle
-    workflow = build_procurement_workflow()
+    workflow: object
     runtime: RuntimeState | None = None
     required_quantity: int = 3
     verification_reads: int = 0
@@ -43,6 +49,22 @@ class RunEnvironment:
     late_recovery_latency_ms: int | None = None
     call_identities: set[str] = None  # type: ignore[assignment]
     fault_injector: FaultInjector | None = None
+    assumption_records: dict[str, AssumptionRecord] | None = None
+    recovery_status: RecoveryStatus | None = None
+    selected_invalidated_operations: tuple[str, ...] = ()
+    compensation_count: int = 0
+    compensation_failures: int = 0
+    operations_recomputed: int = 0
+    operations_revalidated: int = 0
+    invalid_external_effects_remaining: int = 0
+    unsupported_irreversible_effects: int = 0
+    recovery_virtual_latency: int | None = None
+    uncertainty_wait_time: int = 0
+    dependency_records_created: int = 0
+    assumption_records_created: int = 0
+    planner_wall_time_ns: int = 0
+    tracking_wall_time_ns: int = 0
+    preserved_operations: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         self.runtime = RuntimeState(
@@ -51,6 +73,7 @@ class RunEnvironment:
             strategy=self.config.strategy,
         )
         self.call_identities = set()
+        self.assumption_records = {}
         self.fault_injector = FaultInjector(
             plan=self._fault_plan()
         )
@@ -92,6 +115,12 @@ class RunEnvironment:
             "assumption_dependencies": list(operation.assumption_dependencies),
             "compensation_indicator": False,
         }
+
+    def _track_wall(self, fn):
+        started = perf_counter_ns()
+        result = fn()
+        self.tracking_wall_time_ns += perf_counter_ns() - started
+        return result
 
     def op_check_a_stock(self, *, recovery: bool = False) -> None:
         started = self.runtime.begin_tracking()
@@ -196,12 +225,61 @@ class RunEnvironment:
         uncertainty = self.runtime.uncertainties["reserve_a"]
         uncertainty.assumed_status = ObservedStatus.FAILURE
         uncertainty.assumption_at_ms = self.clock.peek()
+        assumption = AssumptionRecord(
+            assumption_id="assumption-reserve_a",
+            uncertainty_id=uncertainty.uncertainty_id,
+            source_operation_id="reserve_a",
+            observed_state=ObservedStatus.UNKNOWN,
+            assumed_state=ObservedStatus.FAILURE,
+            created_at_virtual_time_ms=self.clock.peek(),
+        )
+        self.assumption_records[assumption.assumption_id] = assumption
+        self.assumption_records_created += 1
+        self.runtime_log.append(
+            event_type="assumption_created",
+            sim_time_ms=self.clock.peek(),
+            attempt=ctx.attempt,
+            observed_status="UNKNOWN",
+            assumption="FAILURE",
+            **self._metadata_for(ctx.operation_id),
+        )
         self.runtime_log.append(
             event_type="assumption",
             sim_time_ms=self.clock.peek(),
             attempt=ctx.attempt,
             observed_status="UNKNOWN",
             assumption="FAILURE",
+            **self._metadata_for(ctx.operation_id),
+        )
+
+    def op_create_shipment(self, *, supplier_id: str, recovery: bool = False) -> None:
+        logical_args = {"supplier_id": supplier_id, "sku": "SKU-1", "quantity": self.required_quantity}
+        key = stable_sha256_key(
+            workflow_instance_id=self.config.workflow_instance_id,
+            operation_id="create_shipment",
+            logical_args=logical_args,
+        )
+        started = self.runtime.begin_tracking()
+        ctx = self.runtime.next_context(operation_id="create_shipment", sim_time_ms=self.clock.peek(), idempotency_key=key)
+        self.runtime.end_tracking(started)
+        if recovery:
+            self.replayed_operations += 1
+            self.operations_recomputed += 1
+        self.track_external_call(identity=f"shipment:create:{key}", mutating=True)
+        result = self.shipments.create(
+            idempotency_key=key,
+            supplier_id=supplier_id,
+            sku="SKU-1",
+            quantity=self.required_quantity,
+        )
+        self.runtime.operation_results["create_shipment"] = result.value
+        self.runtime_log.append(
+            event_type="operation",
+            sim_time_ms=self.clock.peek(),
+            attempt=ctx.attempt,
+            observed_status=result.observed_status.value,
+            idempotency_key=key,
+            recovery=recovery,
             **self._metadata_for(ctx.operation_id),
         )
 
@@ -234,6 +312,7 @@ class RunEnvironment:
         )
         self.verification_reads += 1
         result = self.reservations.verify_by_key(idempotency_key=key)
+        self.operations_revalidated += 1
         self.runtime_log.append(
             event_type="verification",
             sim_time_ms=self.clock.peek(),
@@ -261,6 +340,21 @@ class RunEnvironment:
             self.runtime.contradiction_time_ms = self.clock.peek()
             uncertainty.resolved_status = ObservedStatus.SUCCESS
             uncertainty.resolved_at_ms = self.clock.peek()
+            if self.assumption_records:
+                assumption = self.assumption_records.get("assumption-reserve_a")
+                if assumption is not None:
+                    assumption.resolution_state = ObservedStatus.SUCCESS
+                    assumption.resolved_at_virtual_time_ms = self.clock.peek()
+                    assumption.status = AssumptionStatus.RESOLVED_CONTRADICTION
+                    self.runtime_log.append(
+                        event_type="assumption_resolved",
+                        sim_time_ms=self.clock.peek(),
+                        attempt=self.runtime.operation_attempts.get("reserve_a", 0),
+                        observed_status="SUCCESS",
+                        assumption="FAILURE",
+                        assumption_status=assumption.status.value,
+                        **self._metadata_for("reserve_a"),
+                    )
             self.runtime_log.append(
                 event_type="contradiction",
                 sim_time_ms=self.clock.peek(),
@@ -270,6 +364,12 @@ class RunEnvironment:
                 **self._metadata_for("reserve_a"),
             )
             return True
+        if status is ObservedStatus.FAILURE and self.assumption_records:
+            assumption = self.assumption_records.get("assumption-reserve_a")
+            if assumption is not None:
+                assumption.resolution_state = ObservedStatus.FAILURE
+                assumption.resolved_at_virtual_time_ms = self.clock.peek()
+                assumption.status = AssumptionStatus.RESOLVED_MATCH
         return False
 
 
