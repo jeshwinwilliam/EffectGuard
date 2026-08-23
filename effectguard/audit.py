@@ -355,3 +355,39 @@ def run_mixed_scale_audit(output_path: Path) -> dict[str, object]:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
     return report
+
+
+def run_consolidated_p1_audit(output_dir: Path) -> dict[str, object]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    canonical = run_canonical_audit(output_dir / "canonical_audit.json")
+    expansion = run_expansion_audit(output_dir / "expansion_audit.json")
+    scale = run_scale_audit(output_dir / "scale_audit.json")
+    mixed_scale = run_mixed_scale_audit(output_dir / "mixed_scale_audit.json")
+
+    canonical_effectguard = next(
+        row for row in canonical["canonical_five_strategy_results"] if row["strategy"] == "effectguard"
+    )
+    canonical_dependency = next(
+        row for row in canonical["canonical_five_strategy_results"] if row["strategy"] == "dependency_only"
+    )
+    consolidated = {
+        "summary": {
+            "canonical_effectguard_correct": canonical_effectguard["final_state_correct"],
+            "canonical_dependency_only_correct": canonical_dependency["final_state_correct"],
+            "quick_resolution_regime_favors_blocking": expansion["findings"]["quick_resolution_regime_favors_blocking"],
+            "selective_precision_advantage": expansion["findings"]["effectguard_selective_precision_advantage"],
+            "scale_dense_100_precision_advantage": scale["shape_findings"]["dense-100"]["effectguard_precision_advantage"],
+            "mixed_scale_dense_50_precision_advantage": mixed_scale["shape_findings"]["dense-50"]["effectguard_precision_advantage"],
+        },
+        "reports": {
+            "canonical": canonical,
+            "expansion": expansion,
+            "scale": scale,
+            "mixed_scale": mixed_scale,
+        },
+    }
+    (output_dir / "p1_consolidated_audit.json").write_text(
+        json.dumps(consolidated, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+    return consolidated
