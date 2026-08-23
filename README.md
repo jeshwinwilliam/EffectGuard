@@ -71,97 +71,60 @@ This split is what makes the ambiguity meaningful. If the runtime could inspect 
 
 ### Architecture Diagram
 
-```text
-                                                  EffectGuard
-┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                                Experiment Driver                                                         │
-│                                       cli.py  ->  experiment.py  ->  TrialConfig                                         │
-│                                                                                                                            │
-│  Inputs: strategy, seed, fault kind, failure position, uncertainty duration, output path                                  │
-│  Outputs: per-run metrics, grouped summaries, runtime logs, oracle logs, SVG plots                                        │
-└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-                                                       │
-                                                       │ creates
-                                                       v
-┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                              Deterministic Runtime Shell                                                  │
-│                                                                                                                            │
-│  VirtualClock          RuntimeState            FaultInjector               EventLog(runtime)                               │
-│  - simulated time      - attempts              - applies configured        - records only what the runtime could know      │
-│  - no sleep()          - assumptions             fault at op/attempt       - no actual hidden state                         │
-│  - fast reproducible   - uncertainty records   - controls visibility      - used for reproducibility tests                 │
-│                        - replay counters         delays / ambiguity                                                           │
-└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-                                                       │
-                                                       │ executes workflow operations through baseline strategy
-                                                       v
-┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                                Baseline Strategy Layer                                                    │
-│                                                                                                                            │
-│  restart.py                              checkpoint.py                             blocking.py                             │
-│  - reruns from start                     - replays suffix after checkpoint        - polls read-only verification           │
-│  - keeps external world intact           - keeps external world intact            - waits through UNKNOWN if needed        │
-│  - can still leave stale side effects    - can still leave stale side effects     - retries mutating call only after       │
-│                                                                                      definitive negative verification      │
-└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-                                                       │
-                                                       │ calls
-                                                       v
-┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                                  Workflow Definition                                                      │
-│                                           workflow/procurement.py + models.py                                             │
-│                                                                                                                            │
-│  check_a_stock --> reserve_a --> [uncertainty may begin here] --> choose_b --> reserve_b --> build_procurement_plan       │
-│          └──────────────┐                          │                                ▲                                       │
-│                         └────────────> calculate_tax ───────────────────────────────┘                                       │
-│                                                                                                                            │
-│  Metadata carried with the workflow:                                                                                       │
-│  - effect class                                                                                                            │
-│  - service + method                                                                                                        │
-│  - data dependencies                                                                                                       │
-│  - assumption dependencies                                                                                                 │
-│  - checkpoint placement                                                                                                    │
-└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-                                                       │
-                                                       │ talks to
-                                                       v
-┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                              Simulated External Services                                                  │
-│                                                                                                                            │
-│  InventoryService            ReservationService                PaymentService             NotificationService               │
-│  - stock counts              - idempotent reserve/verify       - idempotent auth         - idempotent send                │
-│  - reserved arithmetic       - delayed visibility              - future substrate         - irreversible example           │
-│  - conservation checks       - partial mutation path             continuity                 continuity                     │
-│                              - external state persists across restart/replay                                                 │
-└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-                                                       │
-                      ┌────────────────────────────────┴────────────────────────────────┐
-                      │                                                                 │
-                      │ runtime can observe only ToolResult                             │ oracle sees hidden ground truth
-                      v                                                                 v
-┌────────────────────────────────────────────────────────────────┐       ┌──────────────────────────────────────────────────┐
-│                         Runtime View                           │       │                   Oracle View                     │
-│                                                                │       │                                                      │
-│  ToolResult                                                    │       │  oracle.py                                          │
-│  - observed_status                                             │       │  - snapshots real reservation/inventory state       │
-│  - value                                                       │       │  - checks invariants                                │
-│  - error                                                       │       │  - counts duplicate actual effects                  │
-│  - retryable                                                   │       │  - computes denominator for recovery amplification  │
-│                                                                │       │                                                      │
-│  Crucial limitation: no actual_status field, no hidden truth   │       │  EventLog(oracle) stores harness-only snapshots     │
-└────────────────────────────────────────────────────────────────┘       └──────────────────────────────────────────────────┘
-                      │                                                                 │
-                      └────────────────────────────────┬────────────────────────────────┘
-                                                       │
-                                                       │ exported by experiment runner
-                                                       v
-┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                                     Result Artefacts                                                       │
-│                                                                                                                            │
-│  config.json   runs.csv / runs.json   summary.csv / summary.json   events/*.jsonl   plots/*.svg                           │
-│                                                                                                                            │
-│  These files capture strategy behaviour, correctness, replay cost, verification cost, and output summaries.               │
-└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    cli["CLI\n`effectguard.cli`"] --> runner["Experiment Runner\n`experiment.py`"]
+    runner --> config["TrialConfig\nstrategy, seed, fault, duration, output path"]
+    runner --> runtime["Deterministic Runtime Shell"]
+
+    subgraph runtime["Deterministic Runtime Shell"]
+        clock["VirtualClock\nsimulated time, no sleep"]
+        state["RuntimeState\nattempts, assumptions,\nuncertainty records,\nreplay counters"]
+        injector["FaultInjector\noperation-targeted ambiguity,\nvisibility delay, partial mutation"]
+        rtlog["Runtime Event Log\nonly observable events"]
+    end
+
+    runtime --> strategies["Baseline Strategy Layer"]
+
+    subgraph strategies["Baseline Strategy Layer"]
+        restart["Restart\nrerun from start,\nexternal world preserved"]
+        checkpoint["Checkpoint Replay\nreplay suffix,\nexternal world preserved"]
+        blocking["Blocking Verification\npoll read-only state,\nretry only after definite failure"]
+    end
+
+    strategies --> workflow["Workflow Definition\n`workflow/procurement.py` + `models.py`"]
+
+    subgraph workflow["Workflow Definition"]
+        check["check_a_stock"]
+        reserveA["reserve_a"]
+        tax["calculate_tax"]
+        chooseB["choose_b"]
+        reserveB["reserve_b"]
+        plan["build_procurement_plan"]
+
+        check --> reserveA
+        reserveA --> chooseB
+        chooseB --> reserveB
+        reserveB --> plan
+        tax --> plan
+    end
+
+    workflow --> services["Simulated External Services"]
+
+    subgraph services["Simulated External Services"]
+        inventory["InventoryService\nstock, reserved counts,\nconservation arithmetic"]
+        reservation["ReservationService\nidempotent reserve/verify,\ndelayed visibility,\npartial mutation path"]
+        payment["PaymentService\nidempotent authorisation"]
+        notification["NotificationService\nidempotent send,\nirreversible effect example"]
+    end
+
+    services --> runtime_view["Runtime View\n`ToolResult` only:\nobserved_status, value,\nerror, retryable"]
+    services --> oracle["Oracle View\nhidden committed state,\ninvariants, duplicate-effect counting,\nrecovery denominator"]
+
+    oracle --> olog["Oracle Event Log\nharness-only snapshots"]
+    runtime_view --> exports["Result Artefacts\nconfig.json, runs.csv/json,\nsummary.csv/json,\nruntime/oracle JSONL,\nSVG plots"]
+    oracle --> exports
+    runner --> exports
 ```
 
 ### How To Read The Diagram
@@ -180,14 +143,13 @@ The default workflow is a procurement scenario with one preferred supplier and o
 
 ### Operation Graph
 
-```text
-check_a_stock
-    |
-    v
-reserve_a -----> choose_b -----> reserve_b -----> build_procurement_plan
-    |                                   ^
-    |                                   |
-    └----------> calculate_tax ---------┘
+```mermaid
+flowchart LR
+    check["check_a_stock"] --> reserveA["reserve_a"]
+    reserveA --> chooseB["choose_b"]
+    chooseB --> reserveB["reserve_b"]
+    reserveB --> plan["build_procurement_plan"]
+    tax["calculate_tax"] --> plan
 ```
 
 ### What Each Operation Means
