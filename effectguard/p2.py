@@ -61,6 +61,10 @@ def _campaign_dirs(root: Path, campaign_id: str) -> dict[str, Path]:
     }
 
 
+def _should_write_top_level_reports(root: Path) -> bool:
+    return root.resolve() == Path("results").resolve()
+
+
 def _workflow_variant(*, effect_composition: str, compensation_failure_config: str, affected_fraction_target: float | None) -> str:
     if compensation_failure_config != "none":
         return "p1_compensation_failure"
@@ -485,7 +489,8 @@ def analyze_campaign(campaign_id: str, *, output_root: Path | None = None) -> di
     )
     report_markdown = "\n".join(lines)
     (dirs["processed"] / "P2_EXPERIMENT_REPORT.md").write_text(report_markdown, encoding="utf-8")
-    Path("P2_EXPERIMENT_REPORT.md").write_text(report_markdown, encoding="utf-8")
+    if _should_write_top_level_reports(root):
+        Path("P2_EXPERIMENT_REPORT.md").write_text(report_markdown, encoding="utf-8")
     return report
 
 
@@ -601,6 +606,7 @@ def write_portfolio_summary(*, output_root: Path | None = None) -> Path:
             "- manifests and replayable workload specs live under `results/manifests/<campaign-id>/`",
         ]
     )
-    summary_path = Path("P2_SUMMARY.md")
+    summary_path = (Path("P2_SUMMARY.md") if _should_write_top_level_reports(root) else root / "processed" / "P2_SUMMARY.md")
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
     summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return summary_path

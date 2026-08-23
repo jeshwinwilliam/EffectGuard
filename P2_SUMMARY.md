@@ -11,7 +11,7 @@ P2 was used to evaluate the existing P1 mechanism under paired deterministic wor
 - `p2-pilot-20260823`: runs=2400 completed=2400 unsupported=0 recovery_failures=0 implementation_errors=0
 - `p2-main-20260823`: runs=16200 completed=16200 unsupported=0 recovery_failures=0 implementation_errors=0
 - `p2-effects-20260823`: runs=360 completed=312 unsupported=48 recovery_failures=0 implementation_errors=0
-- `p2-overhead-20260823`: runs=40 completed=40 unsupported=0 recovery_failures=0 implementation_errors=0
+- `p2-overhead-20260823`: runs=80 completed=80 unsupported=0 recovery_failures=0 implementation_errors=0
 - `p2-compfail-20260823`: runs=15 completed=9 unsupported=0 recovery_failures=6 implementation_errors=0
 
 ## Main Findings

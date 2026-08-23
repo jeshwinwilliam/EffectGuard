@@ -548,10 +548,11 @@ def build_run_id(config: TrialConfig) -> str:
     density = config.dependency_density
     size = config.workflow_size
     category = config.failure_position_category
+    fault = config.fault_kind.value.lower()
     affected = "na" if config.affected_fraction_target is None else str(config.affected_fraction_target).replace(".", "p")
     independent = "na" if config.independent_branch_fraction is None else str(config.independent_branch_fraction).replace(".", "p")
     workload = config.workload_id or "default"
     return (
-        f"{config.strategy}-seed{config.seed}-u{config.uncertainty_duration_ms}-{config.failure_position}"
+        f"{config.strategy}-seed{config.seed}-{fault}-u{config.uncertainty_duration_ms}-{config.failure_position}"
         f"-{category}-{variant}-{density}-n{size}-aff{affected}-ind{independent}-{workload}"
     )

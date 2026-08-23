@@ -5,6 +5,8 @@ from pathlib import Path
 
 from effectguard.models import FaultKind
 from effectguard.p2 import analyze_campaign, dry_run_campaign, execute_campaign, plan_campaign, write_portfolio_summary
+from effectguard.baselines.base import build_run_id
+from effectguard.models import TrialConfig
 
 
 def _write_config(path: Path, campaign_id: str = "p2-test-campaign") -> Path:
@@ -116,6 +118,44 @@ def test_portfolio_summary_writes_markdown(tmp_path: Path) -> None:
 
     summary_path = write_portfolio_summary(output_root=results_root)
 
-    assert summary_path == Path("P2_SUMMARY.md")
+    assert summary_path == results_root / "processed" / "P2_SUMMARY.md"
     assert summary_path.exists()
     assert "P2 Summary" in summary_path.read_text(encoding="utf-8")
+
+
+def test_build_run_id_distinguishes_fault_types() -> None:
+    none_config = TrialConfig(
+        strategy="effectguard",
+        seed=1,
+        workflow_instance_id="wf-1",
+        fault_kind=FaultKind.NONE,
+        failure_position="reserve_a",
+        uncertainty_duration_ms=5000,
+        output_dir="results",
+        workflow_variant="generated_mixed",
+        dependency_density="medium",
+        workflow_size=25,
+        affected_fraction_target=0.25,
+        independent_branch_fraction=0.3,
+        effect_composition="compute_heavy",
+        failure_position_category="early",
+        workload_id="wl-overhead",
+    )
+    failure_config = TrialConfig(
+        strategy="effectguard",
+        seed=1,
+        workflow_instance_id="wf-1",
+        fault_kind=FaultKind.UNKNOWN_THEN_FAILURE,
+        failure_position="reserve_a",
+        uncertainty_duration_ms=5000,
+        output_dir="results",
+        workflow_variant="generated_mixed",
+        dependency_density="medium",
+        workflow_size=25,
+        affected_fraction_target=0.25,
+        independent_branch_fraction=0.3,
+        effect_composition="compute_heavy",
+        failure_position_category="early",
+        workload_id="wl-overhead",
+    )
+    assert build_run_id(none_config) != build_run_id(failure_config)

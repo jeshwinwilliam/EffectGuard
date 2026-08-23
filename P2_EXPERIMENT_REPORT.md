@@ -1,25 +1,25 @@
 # P2 Experiment Report
 
-Campaign: `p2-effects-20260823`
+Campaign: `p2-main-20260823`
 
-- completed runs: `312`
-- unsupported runs: `48`
+- completed runs: `16200`
+- unsupported runs: `0`
 - recovery failures: `0`
 - implementation errors: `0`
 
 ## Strategy Summary
 
-- `blocking`: runs=72 correct_supported_rate=1.0
-- `checkpoint`: runs=72 correct_supported_rate=0.0
-- `dependency_only`: runs=72 correct_supported_rate=1.0
-- `effectguard`: runs=72 correct_supported_rate=1.0
-- `restart`: runs=72 correct_supported_rate=0.0
+- `blocking`: runs=3240 correct_supported_rate=1.0
+- `checkpoint`: runs=3240 correct_supported_rate=0.0
+- `dependency_only`: runs=3240 correct_supported_rate=1.0
+- `effectguard`: runs=3240 correct_supported_rate=1.0
+- `restart`: runs=3240 correct_supported_rate=0.0
 
 ## Primary Comparisons
 
-- `P-C1` semantic_recovery_amplification: n=48 mean_diff=-0.3250 ci95=[-0.4271, -0.2333] p=0.0000
-- `P-C2` unaffected_preservation_rate: n=48 mean_diff=0.0000 ci95=[0.0000, 0.0000] p=1.0000
-- `P-C3` total_virtual_completion_time: n=48 mean_diff=-550.0000 ci95=[-550.0000, -550.0000] p=0.0000
+- `P-C1` semantic_recovery_amplification: n=3240 mean_diff=-0.7895 ci95=[-0.8241, -0.7619] p=0.0000
+- `P-C2` unaffected_preservation_rate: n=3240 mean_diff=0.0000 ci95=[0.0000, 0.0000] p=1.0000
+- `P-C3` total_virtual_completion_time: n=3240 mean_diff=-350.0000 ci95=[-358.1173, -342.2222] p=0.0000
 
 ## Where EffectGuard Does Not Win
 
