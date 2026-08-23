@@ -15,6 +15,8 @@ def run_checkpoint(env: RunEnvironment) -> None:
         env.op_choose_b()
         for operation_id in env.analysis_operation_ids():
             env.op_generic_pure(operation_id)
+        for operation_id in env.risky_analysis_operation_ids():
+            env.op_generic_pure(operation_id)
         env.op_reserve_b()
         env.op_build_plan(supplier_id="B")
         env.clock.advance(max(0, env.config.uncertainty_duration_ms - 100))

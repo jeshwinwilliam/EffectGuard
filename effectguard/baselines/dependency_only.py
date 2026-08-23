@@ -17,6 +17,8 @@ def run_dependency_only(env: RunEnvironment) -> None:
         env.op_choose_b()
         for operation_id in env.analysis_operation_ids():
             env.op_generic_pure(operation_id)
+        for operation_id in env.risky_analysis_operation_ids():
+            env.op_generic_pure(operation_id)
         if "record_audit" in env.workflow.operations:
             env.op_record_audit()
         if "record_finance_snapshot" in env.workflow.operations:

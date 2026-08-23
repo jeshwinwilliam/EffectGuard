@@ -101,7 +101,14 @@ class Oracle:
         } and failure_position == "reserve_a":
             return ("choose_b", "reserve_b", "create_shipment", "build_procurement_plan")
         if self.workflow.workflow_id.startswith("procurement-p1-generated-") and failure_position == "reserve_a":
-            return ("choose_b", "reserve_b", "create_shipment", "build_procurement_plan")
+            risky_ids = tuple(
+                sorted(
+                    operation_id
+                    for operation_id in self.workflow.operations
+                    if operation_id.startswith("risky_analysis_")
+                )
+            )
+            return ("choose_b", "reserve_b", "create_shipment", "build_procurement_plan", *risky_ids)
         if self.workflow.workflow_id == "procurement-p1-irreversible" and failure_position == "reserve_a":
             return ("choose_b", "reserve_b", "create_shipment", "send_notification", "build_procurement_plan")
         return ()

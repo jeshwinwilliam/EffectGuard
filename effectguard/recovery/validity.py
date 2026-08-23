@@ -18,6 +18,22 @@ def evaluate_validity(
             result=ValidityResult.VALID,
             reason="derived analytical record remains valid historical evidence",
         )
+    if operation_id.startswith("risky_analysis_"):
+        if invalid_inputs & {"choose_b", "reserve_b", "create_shipment", "send_notification"}:
+            return ValidityEvaluation(
+                operation_id=operation_id,
+                result=ValidityResult.INVALID,
+                reason="derived artifact depends on invalid fallback supplier decision",
+            )
+        value = runtime_results.get(operation_id)
+        if isinstance(value, dict):
+            supplier_id = value.get("supplier_id")
+            if supplier_id is not None and supplier_id != resolved_supplier_id:
+                return ValidityEvaluation(
+                    operation_id=operation_id,
+                    result=ValidityResult.INVALID,
+                    reason="derived artifact encodes contradicted supplier",
+                )
     if operation_id == "choose_b":
         if resolved_supplier_id == "A":
             return ValidityEvaluation(operation_id=operation_id, result=ValidityResult.INVALID, reason="fallback choice contradicted")

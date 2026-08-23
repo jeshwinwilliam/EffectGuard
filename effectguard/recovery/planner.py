@@ -101,6 +101,7 @@ def build_effectguard_plan(env) -> RecoveryPlan:
         operation_ids.append("supplier_annotation")
     operation_ids.extend(env.independent_operation_ids())
     operation_ids.extend(env.analysis_operation_ids())
+    operation_ids.extend(env.risky_analysis_operation_ids())
     if "send_notification" in env.workflow.operations:
         operation_ids.append("send_notification")
     evaluations = [

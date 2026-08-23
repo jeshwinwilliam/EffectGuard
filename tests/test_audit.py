@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from effectguard.audit import run_canonical_audit, run_expansion_audit, run_scale_audit
+from effectguard.audit import run_canonical_audit, run_expansion_audit, run_mixed_scale_audit, run_scale_audit
 
 
 def test_canonical_audit_writes_five_strategy_report(tmp_path: Path) -> None:
@@ -25,6 +25,14 @@ def test_expansion_audit_reports_precision_advantage_and_blocking_regime(tmp_pat
 def test_scale_audit_reports_shape_level_selectivity(tmp_path: Path) -> None:
     output = tmp_path / "scale.json"
     report = run_scale_audit(output)
+    assert output.exists()
+    assert report["shape_findings"]["dense-25"]["effectguard_precision_advantage"] > 0
+    assert report["shape_findings"]["dense-25"]["effectguard_selected_fewer_operations"] is True
+
+
+def test_mixed_scale_audit_reports_advantage_on_mixed_family(tmp_path: Path) -> None:
+    output = tmp_path / "mixed-scale.json"
+    report = run_mixed_scale_audit(output)
     assert output.exists()
     assert report["shape_findings"]["dense-25"]["effectguard_precision_advantage"] > 0
     assert report["shape_findings"]["dense-25"]["effectguard_selected_fewer_operations"] is True

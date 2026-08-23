@@ -296,3 +296,62 @@ def run_scale_audit(output_path: Path) -> dict[str, object]:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
     return report
+
+
+def mixed_scale_configs() -> list[TrialConfig]:
+    configs: list[TrialConfig] = []
+    for dependency_density in ("sparse", "medium", "dense"):
+        for workflow_size in (10, 25, 50):
+            for strategy in ("dependency_only", "effectguard"):
+                configs.append(
+                    TrialConfig(
+                        strategy=strategy,
+                        seed=42,
+                        workflow_instance_id=f"wf-mixed-{strategy}-{dependency_density}-{workflow_size}-42",
+                        fault_kind=FaultKind.CONTRADICTORY_LATE_RESOLUTION,
+                        failure_position="reserve_a",
+                        uncertainty_duration_ms=5000,
+                        output_dir="results/p1-mixed-scale",
+                        workflow_variant="generated_mixed",
+                        dependency_density=dependency_density,
+                        workflow_size=workflow_size,
+                    )
+                )
+    return configs
+
+
+def run_mixed_scale_audit(output_path: Path) -> dict[str, object]:
+    runner = ExperimentRunner()
+    rows: list[dict[str, object]] = []
+    for config in mixed_scale_configs():
+        artifacts = runner.run_trial_artifacts(config)
+        metrics = artifacts.metrics
+        rows.append(
+            {
+                "strategy": metrics.strategy,
+                "dependency_density": config.dependency_density,
+                "workflow_size": config.workflow_size,
+                "final_state_correct": metrics.final_state_correct,
+                "selected_count": len(metrics.selected_invalidated_operations),
+                "selected_invalidated_operations": list(metrics.selected_invalidated_operations),
+                "precision": metrics.recovery_selection_precision,
+                "recall": metrics.recovery_selection_recall,
+            }
+        )
+    findings: dict[str, dict[str, object]] = {}
+    for dependency_density in ("sparse", "medium", "dense"):
+        for workflow_size in (10, 25, 50):
+            shape_rows = [
+                row for row in rows
+                if row["dependency_density"] == dependency_density and row["workflow_size"] == workflow_size
+            ]
+            dependency_row = next(row for row in shape_rows if row["strategy"] == "dependency_only")
+            effectguard_row = next(row for row in shape_rows if row["strategy"] == "effectguard")
+            findings[f"{dependency_density}-{workflow_size}"] = {
+                "effectguard_precision_advantage": effectguard_row["precision"] - dependency_row["precision"],
+                "effectguard_selected_fewer_operations": effectguard_row["selected_count"] < dependency_row["selected_count"],
+            }
+    report = {"mixed_scale_results": rows, "shape_findings": findings}
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
+    return report

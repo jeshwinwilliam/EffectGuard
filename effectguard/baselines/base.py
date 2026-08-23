@@ -330,7 +330,7 @@ class RunEnvironment:
         if recovery:
             self.replayed_operations += 1
             self.operations_recomputed += 1
-        if operation_id.startswith("analysis_"):
+        if operation_id.startswith(("analysis_", "risky_analysis_")):
             value = {"message": f"{operation_id} recorded", "supplier_id": "B", "kind": "analysis"}
         else:
             value = {"message": f"{operation_id} computed", "kind": "independent"}
@@ -516,6 +516,9 @@ class RunEnvironment:
 
     def analysis_operation_ids(self) -> list[str]:
         return [operation_id for operation_id in self.workflow.order if operation_id.startswith("analysis_")]
+
+    def risky_analysis_operation_ids(self) -> list[str]:
+        return [operation_id for operation_id in self.workflow.order if operation_id.startswith("risky_analysis_")]
 
     def validity_metadata_bytes(self) -> int:
         payload = {

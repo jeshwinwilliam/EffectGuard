@@ -28,7 +28,7 @@ from .workflow.procurement import (
     build_procurement_p1_workflow,
     build_procurement_workflow,
 )
-from .workflow.generated import build_generated_procurement_workflow
+from .workflow.generated import build_generated_mixed_procurement_workflow, build_generated_procurement_workflow
 
 
 def create_environment(config: TrialConfig) -> RunEnvironment:
@@ -43,10 +43,16 @@ def create_environment(config: TrialConfig) -> RunEnvironment:
     payments = PaymentService()
     notifications = NotificationService()
     if config.dependency_density != "canonical" or config.workflow_size != 8:
-        workflow = build_generated_procurement_workflow(
-            dependency_density=config.dependency_density,
-            workflow_size=config.workflow_size,
-        )
+        if config.workflow_variant == "generated_mixed":
+            workflow = build_generated_mixed_procurement_workflow(
+                dependency_density=config.dependency_density,
+                workflow_size=config.workflow_size,
+            )
+        else:
+            workflow = build_generated_procurement_workflow(
+                dependency_density=config.dependency_density,
+                workflow_size=config.workflow_size,
+            )
     elif config.workflow_variant == "p1_selective":
         workflow = build_procurement_p1_selective_workflow()
     elif config.workflow_variant == "p1_selective_double":
