@@ -1,0 +1,13 @@
+{
+  "figures": {
+    "blocking_uncertainty": "results/p1-paper-assets/figures/blocking_uncertainty.svg",
+    "dense_mixed_precision_advantage": "results/p1-paper-assets/figures/dense_mixed_precision_advantage.svg",
+    "dense_scale_precision_advantage": "results/p1-paper-assets/figures/dense_scale_precision_advantage.svg"
+  },
+  "status": "PASS",
+  "tables": {
+    "canonical_summary": "results/p1-paper-assets/tables/canonical_summary.csv",
+    "mixed_scale_precision": "results/p1-paper-assets/tables/mixed_scale_precision.csv",
+    "scale_precision": "results/p1-paper-assets/tables/scale_precision.csv"
+  }
+}

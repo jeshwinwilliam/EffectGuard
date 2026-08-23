@@ -1,0 +1,189 @@
+{
+  "edge_count": 10,
+  "edges": [
+    {
+      "child": "analysis_02",
+      "kind": "DATA",
+      "parent": "analysis_01"
+    },
+    {
+      "child": "build_procurement_plan",
+      "kind": "DATA",
+      "parent": "analysis_02"
+    },
+    {
+      "child": "build_procurement_plan",
+      "kind": "DATA",
+      "parent": "calculate_tax"
+    },
+    {
+      "child": "reserve_a",
+      "kind": "DATA",
+      "parent": "check_a_stock"
+    },
+    {
+      "child": "analysis_01",
+      "kind": "CONTROL",
+      "parent": "choose_b"
+    },
+    {
+      "child": "analysis_02",
+      "kind": "CONTROL",
+      "parent": "choose_b"
+    },
+    {
+      "child": "reserve_b",
+      "kind": "CONTROL",
+      "parent": "choose_b"
+    },
+    {
+      "child": "build_procurement_plan",
+      "kind": "DATA",
+      "parent": "create_shipment"
+    },
+    {
+      "child": "choose_b",
+      "kind": "ASSUMPTION",
+      "parent": "reserve_a"
+    },
+    {
+      "child": "create_shipment",
+      "kind": "DATA",
+      "parent": "reserve_b"
+    }
+  ],
+  "operation_count": 10,
+  "operations": [
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": true,
+      "dependencies": [],
+      "effect_class": "READ",
+      "method": "read_stock",
+      "name": "Read Supplier A stock",
+      "operation_id": "check_a_stock",
+      "service": "inventory"
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "check_a_stock"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Independent prefix analysis 1",
+      "operation_id": "independent_prefix_01",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "check_a_stock"
+      ],
+      "effect_class": "COMPENSABLE",
+      "method": "reserve",
+      "name": "Reserve Supplier A quantity",
+      "operation_id": "reserve_a",
+      "service": "reservation"
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Calculate tax",
+      "operation_id": "calculate_tax",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [
+        "reserve_a"
+      ],
+      "checkpoint_after": false,
+      "dependencies": [],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Choose fallback supplier B",
+      "operation_id": "choose_b",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "choose_b"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Fallback analytical record 1",
+      "operation_id": "analysis_01",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "analysis_01"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Fallback analytical record 2",
+      "operation_id": "analysis_02",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "choose_b"
+      ],
+      "effect_class": "COMPENSABLE",
+      "method": "reserve",
+      "name": "Reserve Supplier B quantity",
+      "operation_id": "reserve_b",
+      "service": "reservation"
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "reserve_b"
+      ],
+      "effect_class": "COMPENSABLE",
+      "method": "create",
+      "name": "Create shipment for chosen supplier",
+      "operation_id": "create_shipment",
+      "service": "shipment"
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "create_shipment",
+        "calculate_tax",
+        "analysis_02"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Build procurement plan",
+      "operation_id": "build_procurement_plan",
+      "service": null
+    }
+  ],
+  "topological_order": [
+    "check_a_stock",
+    "independent_prefix_01",
+    "reserve_a",
+    "calculate_tax",
+    "choose_b",
+    "analysis_01",
+    "analysis_02",
+    "reserve_b",
+    "create_shipment",
+    "build_procurement_plan"
+  ],
+  "workflow_id": "procurement-p1-generated-medium-10-late"
+}

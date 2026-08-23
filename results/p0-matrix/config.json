@@ -1,0 +1,18 @@
+{
+  "base_seed": 42,
+  "failure_positions": [
+    "reserve_a"
+  ],
+  "fault_kind": "CONTRADICTORY_LATE_RESOLUTION",
+  "n_trials": 3,
+  "strategies": [
+    "restart",
+    "checkpoint",
+    "blocking"
+  ],
+  "uncertainty_durations_ms": [
+    100,
+    500,
+    1000
+  ]
+}

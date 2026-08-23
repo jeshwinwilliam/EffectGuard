@@ -1,0 +1,2 @@
+run_id,strategy,seed,fault_kind,failure_position,uncertainty_duration_ms,final_state_correct,duplicate_effects,recovery_amplification,recovery_latency_ms,late_recovery_latency_ms,repeated_external_calls,repeated_mutating_calls,verification_reads,runtime_replayed_operations,contradiction_detected,instrumentation_ns,instrumentation_pct
+blocking-seed42-u5000-reserve_a,blocking,42,CONTRADICTORY_LATE_RESOLUTION,reserve_a,5000,True,0,0.0,5550,,0,0,11,0,False,10376,3.736285104191798

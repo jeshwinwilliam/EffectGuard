@@ -1,0 +1,23 @@
+[
+  {
+    "contradiction_detected": true,
+    "duplicate_effects": 0,
+    "failure_position": "reserve_a",
+    "fault_kind": "CONTRADICTORY_LATE_RESOLUTION",
+    "final_state_correct": false,
+    "graph_affected_operations": 4,
+    "instrumentation_ns": 19039,
+    "instrumentation_pct": 6.536053170014967,
+    "late_recovery_latency_ms": 0,
+    "recovery_amplification": 1.0,
+    "recovery_latency_ms": 5000,
+    "repeated_external_calls": 1,
+    "repeated_mutating_calls": 1,
+    "run_id": "restart-seed42-u5000-reserve_a",
+    "runtime_replayed_operations": 4,
+    "seed": 42,
+    "strategy": "restart",
+    "uncertainty_duration_ms": 5000,
+    "verification_reads": 1
+  }
+]

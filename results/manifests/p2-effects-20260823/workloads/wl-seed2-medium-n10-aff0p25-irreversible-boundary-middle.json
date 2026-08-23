@@ -1,0 +1,153 @@
+{
+  "edge_count": 8,
+  "edges": [
+    {
+      "child": "build_procurement_plan",
+      "kind": "DATA",
+      "parent": "calculate_tax"
+    },
+    {
+      "child": "reserve_a",
+      "kind": "DATA",
+      "parent": "check_a_stock"
+    },
+    {
+      "child": "reserve_b",
+      "kind": "CONTROL",
+      "parent": "choose_b"
+    },
+    {
+      "child": "build_procurement_plan",
+      "kind": "DATA",
+      "parent": "create_shipment"
+    },
+    {
+      "child": "choose_b",
+      "kind": "ASSUMPTION",
+      "parent": "reserve_a"
+    },
+    {
+      "child": "create_shipment",
+      "kind": "DATA",
+      "parent": "reserve_b"
+    },
+    {
+      "child": "send_notification",
+      "kind": "DATA",
+      "parent": "reserve_b"
+    },
+    {
+      "child": "build_procurement_plan",
+      "kind": "DATA",
+      "parent": "send_notification"
+    }
+  ],
+  "operation_count": 8,
+  "operations": [
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": true,
+      "dependencies": [],
+      "effect_class": "READ",
+      "method": "read_stock",
+      "name": "Read Supplier A stock",
+      "operation_id": "check_a_stock",
+      "service": "inventory"
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "check_a_stock"
+      ],
+      "effect_class": "COMPENSABLE",
+      "method": "reserve",
+      "name": "Reserve Supplier A quantity",
+      "operation_id": "reserve_a",
+      "service": "reservation"
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Calculate tax",
+      "operation_id": "calculate_tax",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [
+        "reserve_a"
+      ],
+      "checkpoint_after": false,
+      "dependencies": [],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Choose fallback supplier B",
+      "operation_id": "choose_b",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "choose_b"
+      ],
+      "effect_class": "COMPENSABLE",
+      "method": "reserve",
+      "name": "Reserve Supplier B quantity",
+      "operation_id": "reserve_b",
+      "service": "reservation"
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "reserve_b"
+      ],
+      "effect_class": "COMPENSABLE",
+      "method": "create",
+      "name": "Create shipment for chosen supplier",
+      "operation_id": "create_shipment",
+      "service": "shipment"
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "reserve_b"
+      ],
+      "effect_class": "IRREVERSIBLE",
+      "method": "send",
+      "name": "Send irreversible supplier notification",
+      "operation_id": "send_notification",
+      "service": "notification"
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "create_shipment",
+        "calculate_tax",
+        "send_notification"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Build procurement plan",
+      "operation_id": "build_procurement_plan",
+      "service": null
+    }
+  ],
+  "topological_order": [
+    "check_a_stock",
+    "reserve_a",
+    "calculate_tax",
+    "choose_b",
+    "reserve_b",
+    "create_shipment",
+    "send_notification",
+    "build_procurement_plan"
+  ],
+  "workflow_id": "procurement-p1-irreversible"
+}

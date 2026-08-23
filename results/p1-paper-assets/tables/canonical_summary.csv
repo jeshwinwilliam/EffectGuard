@@ -1,0 +1,6 @@
+strategy,final_state_correct,recovery_status,precision,recall,compensation_count,total_virtual_completion_time
+blocking,True,N/A,N/A,N/A,0,5550
+restart,False,N/A,N/A,N/A,0,5000
+checkpoint,False,N/A,N/A,N/A,0,5000
+dependency_only,True,RECOVERED,1.0,1.0,2,5000
+effectguard,True,RECOVERED,1.0,1.0,2,5000

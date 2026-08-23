@@ -1,0 +1,39 @@
+{
+  "campaign_id": "p2-overhead-20260823",
+  "completed_count": 80,
+  "implementation_error_count": 0,
+  "primary_comparisons": {
+    "P-C3": {
+      "ci95_high": -506.25,
+      "ci95_low": -877.5,
+      "holm_adjusted_p_value": 1.9073486328125e-06,
+      "mean_difference": -675.0,
+      "metric": "total_virtual_completion_time",
+      "p_value": 1.9073486328125e-06,
+      "pair_count": 40
+    }
+  },
+  "recovery_failure_count": 0,
+  "run_count": 80,
+  "strategy_summary": [
+    {
+      "completed_count": 40,
+      "correctness_rate": 0.5,
+      "implementation_error_count": 0,
+      "recovery_failed_count": 0,
+      "run_count": 40,
+      "strategy": "blocking",
+      "unsupported_count": 0
+    },
+    {
+      "completed_count": 40,
+      "correctness_rate": 1.0,
+      "implementation_error_count": 0,
+      "recovery_failed_count": 0,
+      "run_count": 40,
+      "strategy": "effectguard",
+      "unsupported_count": 0
+    }
+  ],
+  "unsupported_count": 0
+}

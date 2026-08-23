@@ -1,0 +1,6 @@
+strategy,run_count,completed_count,unsupported_count,recovery_failed_count,implementation_error_count,correctness_rate
+blocking,3240,3240,0,0,0,1.0
+checkpoint,3240,3240,0,0,0,0.0
+dependency_only,3240,3240,0,0,0,1.0
+effectguard,3240,3240,0,0,0,1.0
+restart,3240,3240,0,0,0,0.0

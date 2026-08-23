@@ -1,0 +1,56 @@
+{
+  "campaign_id": "p2-compfail-20260823",
+  "completed_count": 9,
+  "implementation_error_count": 0,
+  "primary_comparisons": {},
+  "recovery_failure_count": 6,
+  "run_count": 15,
+  "strategy_summary": [
+    {
+      "completed_count": 3,
+      "correctness_rate": 1.0,
+      "implementation_error_count": 0,
+      "recovery_failed_count": 0,
+      "run_count": 3,
+      "strategy": "blocking",
+      "unsupported_count": 0
+    },
+    {
+      "completed_count": 3,
+      "correctness_rate": 0.0,
+      "implementation_error_count": 0,
+      "recovery_failed_count": 0,
+      "run_count": 3,
+      "strategy": "checkpoint",
+      "unsupported_count": 0
+    },
+    {
+      "completed_count": 0,
+      "correctness_rate": 0.0,
+      "implementation_error_count": 0,
+      "recovery_failed_count": 3,
+      "run_count": 3,
+      "strategy": "dependency_only",
+      "unsupported_count": 0
+    },
+    {
+      "completed_count": 0,
+      "correctness_rate": 0.0,
+      "implementation_error_count": 0,
+      "recovery_failed_count": 3,
+      "run_count": 3,
+      "strategy": "effectguard",
+      "unsupported_count": 0
+    },
+    {
+      "completed_count": 3,
+      "correctness_rate": 0.0,
+      "implementation_error_count": 0,
+      "recovery_failed_count": 0,
+      "run_count": 3,
+      "strategy": "restart",
+      "unsupported_count": 0
+    }
+  ],
+  "unsupported_count": 0
+}

@@ -1,0 +1,46 @@
+{
+  "affected_fraction_targets": [
+    0.25
+  ],
+  "campaign_id": "p2-overhead-20260823",
+  "compensation_failure_config": "none",
+  "dependency_densities": [
+    "medium"
+  ],
+  "effect_compositions": [
+    "compute_heavy"
+  ],
+  "experiment_schema_version": "0.1",
+  "failure_positions": [
+    "early"
+  ],
+  "fault_types": [
+    "NONE",
+    "UNKNOWN_THEN_FAILURE"
+  ],
+  "git_commit": "e7d155a4c6bdf01148e50fd534235b679f5f1579",
+  "platform": "macOS-26.5.1-x86_64-i386-64bit",
+  "python_version": "3.9.7 (default, Sep 16 2021, 08:50:36) \n[Clang 10.0.0 ]",
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "strategies": [
+    "blocking",
+    "effectguard"
+  ],
+  "timestamp": "2026-08-23T22:22:25.942781+00:00",
+  "total_planned_runs": 80,
+  "uncertainty_durations": [
+    5000
+  ],
+  "workflow_sizes": [
+    10,
+    25,
+    50,
+    100
+  ]
+}

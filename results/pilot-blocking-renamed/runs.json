@@ -1,0 +1,22 @@
+[
+  {
+    "contradiction_detected": false,
+    "duplicate_effects": 0,
+    "failure_position": "reserve_a",
+    "fault_kind": "CONTRADICTORY_LATE_RESOLUTION",
+    "final_state_correct": true,
+    "instrumentation_ns": 10376,
+    "instrumentation_pct": 3.736285104191798,
+    "late_recovery_latency_ms": null,
+    "recovery_amplification": 0.0,
+    "recovery_latency_ms": 5550,
+    "repeated_external_calls": 0,
+    "repeated_mutating_calls": 0,
+    "run_id": "blocking-seed42-u5000-reserve_a",
+    "runtime_replayed_operations": 0,
+    "seed": 42,
+    "strategy": "blocking",
+    "uncertainty_duration_ms": 5000,
+    "verification_reads": 11
+  }
+]

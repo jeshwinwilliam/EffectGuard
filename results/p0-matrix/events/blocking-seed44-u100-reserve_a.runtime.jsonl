@@ -1,0 +1,7 @@
+{"attempt": 1, "channel": "runtime", "event_type": "operation", "observed_status": "SUCCESS", "operation_id": "check_a_stock", "sim_time_ms": 0}
+{"attempt": 1, "channel": "runtime", "event_type": "operation", "observed_status": "UNKNOWN", "operation_id": "reserve_a", "sim_time_ms": 0}
+{"attempt": 1, "channel": "runtime", "event_type": "operation", "observed_status": "SUCCESS", "operation_id": "calculate_tax", "sim_time_ms": 0}
+{"channel": "runtime", "event_type": "verification", "observed_status": "UNKNOWN", "operation_id": "reserve_a", "sim_time_ms": 0}
+{"channel": "runtime", "event_type": "verification", "observed_status": "UNKNOWN", "operation_id": "reserve_a", "sim_time_ms": 50}
+{"channel": "runtime", "event_type": "verification", "observed_status": "SUCCESS", "operation_id": "reserve_a", "sim_time_ms": 150}
+{"attempt": 1, "channel": "runtime", "event_type": "operation", "observed_status": "SUCCESS", "operation_id": "build_procurement_plan", "sim_time_ms": 150}

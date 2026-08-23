@@ -1,0 +1,84 @@
+{
+  "campaign_id": "p2-effects-20260823",
+  "completed_count": 312,
+  "implementation_error_count": 0,
+  "primary_comparisons": {
+    "P-C1": {
+      "ci95_high": -0.23333333333333336,
+      "ci95_low": -0.4270833333333334,
+      "holm_adjusted_p_value": 2.384185791015625e-07,
+      "mean_difference": -0.32500000000000007,
+      "metric": "semantic_recovery_amplification",
+      "p_value": 1.1920928955078125e-07,
+      "pair_count": 48
+    },
+    "P-C2": {
+      "ci95_high": 0.0,
+      "ci95_low": 0.0,
+      "holm_adjusted_p_value": 1.0,
+      "mean_difference": 0.0,
+      "metric": "unaffected_preservation_rate",
+      "p_value": 1.0,
+      "pair_count": 48
+    },
+    "P-C3": {
+      "ci95_high": -550.0,
+      "ci95_low": -550.0,
+      "holm_adjusted_p_value": 2.1316282072803006e-14,
+      "mean_difference": -550.0,
+      "metric": "total_virtual_completion_time",
+      "p_value": 7.105427357601002e-15,
+      "pair_count": 48
+    }
+  },
+  "recovery_failure_count": 0,
+  "run_count": 360,
+  "strategy_summary": [
+    {
+      "completed_count": 72,
+      "correctness_rate": 1.0,
+      "implementation_error_count": 0,
+      "recovery_failed_count": 0,
+      "run_count": 72,
+      "strategy": "blocking",
+      "unsupported_count": 0
+    },
+    {
+      "completed_count": 72,
+      "correctness_rate": 0.0,
+      "implementation_error_count": 0,
+      "recovery_failed_count": 0,
+      "run_count": 72,
+      "strategy": "checkpoint",
+      "unsupported_count": 0
+    },
+    {
+      "completed_count": 48,
+      "correctness_rate": 1.0,
+      "implementation_error_count": 0,
+      "recovery_failed_count": 0,
+      "run_count": 72,
+      "strategy": "dependency_only",
+      "unsupported_count": 24
+    },
+    {
+      "completed_count": 48,
+      "correctness_rate": 1.0,
+      "implementation_error_count": 0,
+      "recovery_failed_count": 0,
+      "run_count": 72,
+      "strategy": "effectguard",
+      "unsupported_count": 24
+    },
+    {
+      "completed_count": 72,
+      "correctness_rate": 0.0,
+      "implementation_error_count": 0,
+      "recovery_failed_count": 0,
+      "run_count": 72,
+      "strategy": "restart",
+      "unsupported_count": 0
+    }
+  ],
+  "unsupported_count": 48
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "contradiction_detected": true,
+    "duplicate_effects": 0,
+    "failure_position": "reserve_a",
+    "fault_kind": "CONTRADICTORY_LATE_RESOLUTION",
+    "final_state_correct": false,
+    "instrumentation_ns": 19375,
+    "instrumentation_pct": 8.795144626223376,
+    "late_recovery_latency_ms": 0,
+    "recovery_amplification": 0.75,
+    "recovery_latency_ms": 5000,
+    "repeated_external_calls": 1,
+    "repeated_mutating_calls": 1,
+    "run_id": "checkpoint-seed42-u5000-reserve_a",
+    "runtime_replayed_operations": 3,
+    "seed": 42,
+    "strategy": "checkpoint",
+    "uncertainty_duration_ms": 5000,
+    "verification_reads": 1
+  }
+]

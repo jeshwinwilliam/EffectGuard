@@ -1,0 +1,84 @@
+{
+  "campaign_id": "p2-calibration-20260823",
+  "completed_count": 960,
+  "implementation_error_count": 0,
+  "primary_comparisons": {
+    "P-C1": {
+      "ci95_high": -0.2713541666666665,
+      "ci95_low": -0.38541666666666624,
+      "holm_adjusted_p_value": 5.048709793414476e-29,
+      "mean_difference": -0.3249999999999997,
+      "metric": "semantic_recovery_amplification",
+      "p_value": 2.524354896707238e-29,
+      "pair_count": 192
+    },
+    "P-C2": {
+      "ci95_high": 0.0,
+      "ci95_low": 0.0,
+      "holm_adjusted_p_value": 1.0,
+      "mean_difference": 0.0,
+      "metric": "unaffected_preservation_rate",
+      "p_value": 1.0,
+      "pair_count": 192
+    },
+    "P-C3": {
+      "ci95_high": -252.60416666666666,
+      "ci95_low": -314.0625,
+      "holm_adjusted_p_value": 9.558551466794714e-58,
+      "mean_difference": -283.3333333333333,
+      "metric": "total_virtual_completion_time",
+      "p_value": 3.1861838222649046e-58,
+      "pair_count": 192
+    }
+  },
+  "recovery_failure_count": 0,
+  "run_count": 960,
+  "strategy_summary": [
+    {
+      "completed_count": 192,
+      "correctness_rate": 1.0,
+      "implementation_error_count": 0,
+      "recovery_failed_count": 0,
+      "run_count": 192,
+      "strategy": "blocking",
+      "unsupported_count": 0
+    },
+    {
+      "completed_count": 192,
+      "correctness_rate": 0.0,
+      "implementation_error_count": 0,
+      "recovery_failed_count": 0,
+      "run_count": 192,
+      "strategy": "checkpoint",
+      "unsupported_count": 0
+    },
+    {
+      "completed_count": 192,
+      "correctness_rate": 1.0,
+      "implementation_error_count": 0,
+      "recovery_failed_count": 0,
+      "run_count": 192,
+      "strategy": "dependency_only",
+      "unsupported_count": 0
+    },
+    {
+      "completed_count": 192,
+      "correctness_rate": 1.0,
+      "implementation_error_count": 0,
+      "recovery_failed_count": 0,
+      "run_count": 192,
+      "strategy": "effectguard",
+      "unsupported_count": 0
+    },
+    {
+      "completed_count": 192,
+      "correctness_rate": 0.0,
+      "implementation_error_count": 0,
+      "recovery_failed_count": 0,
+      "run_count": 192,
+      "strategy": "restart",
+      "unsupported_count": 0
+    }
+  ],
+  "unsupported_count": 0
+}

@@ -1,0 +1,10 @@
+{
+  "failure_position": "reserve_a",
+  "fault_kind": "CONTRADICTORY_LATE_RESOLUTION",
+  "output_dir": "results/p1-audit-checkpoint",
+  "seed": 42,
+  "strategy": "checkpoint",
+  "uncertainty_duration_ms": 5000,
+  "workflow_instance_id": "wf-42",
+  "workflow_variant": "auto"
+}

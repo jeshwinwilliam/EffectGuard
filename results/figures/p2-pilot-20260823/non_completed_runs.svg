@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="420">
+<text x="360.0" y="24" text-anchor="middle" font-size="18">Non-Completed Runs by Strategy</text>
+<line x1="70" y1="50" x2="70" y2="330" stroke="#333"/>
+<line x1="70" y1="330" x2="700" y2="330" stroke="#333"/>
+<text x="18" y="210.0" transform="rotate(-90 18 210.0)" text-anchor="middle" font-size="13">Run Count</text>
+<line x1="66" y1="330.0" x2="70" y2="330.0" stroke="#333"/>
+<text x="62" y="334.0" text-anchor="end" font-size="11">0</text>
+<line x1="66" y1="260.0" x2="70" y2="260.0" stroke="#333"/>
+<text x="62" y="264.0" text-anchor="end" font-size="11">0</text>
+<line x1="66" y1="190.0" x2="70" y2="190.0" stroke="#333"/>
+<text x="62" y="194.0" text-anchor="end" font-size="11">0</text>
+<line x1="66" y1="120.0" x2="70" y2="120.0" stroke="#333"/>
+<text x="62" y="124.0" text-anchor="end" font-size="11">0</text>
+<line x1="66" y1="50.0" x2="70" y2="50.0" stroke="#333"/>
+<text x="62" y="54.0" text-anchor="end" font-size="11">1</text>
+<rect x="97.0" y="330.0" width="72" height="0.0" fill="#2f7d6b"/>
+<text x="133.0" y="322.0" text-anchor="middle" font-size="11">0</text>
+<text x="133.0" y="348" text-anchor="end" font-size="11" transform="rotate(-30 133.0 348)">blocking</text>
+<rect x="223.0" y="330.0" width="72" height="0.0" fill="#e0a458"/>
+<text x="259.0" y="322.0" text-anchor="middle" font-size="11">0</text>
+<text x="259.0" y="348" text-anchor="end" font-size="11" transform="rotate(-30 259.0 348)">checkpoint</text>
+<rect x="349.0" y="330.0" width="72" height="0.0" fill="#3d5a80"/>
+<text x="385.0" y="322.0" text-anchor="middle" font-size="11">0</text>
+<text x="385.0" y="348" text-anchor="end" font-size="11" transform="rotate(-30 385.0 348)">dependency_only</text>
+<rect x="475.0" y="330.0" width="72" height="0.0" fill="#1d3557"/>
+<text x="511.0" y="322.0" text-anchor="middle" font-size="11">0</text>
+<text x="511.0" y="348" text-anchor="end" font-size="11" transform="rotate(-30 511.0 348)">effectguard</text>
+<rect x="601.0" y="330.0" width="72" height="0.0" fill="#d94841"/>
+<text x="637.0" y="322.0" text-anchor="middle" font-size="11">0</text>
+<text x="637.0" y="348" text-anchor="end" font-size="11" transform="rotate(-30 637.0 348)">restart</text>
+</svg>

@@ -1,0 +1,9 @@
+{
+  "failure_position": "reserve_a",
+  "fault_kind": "CONTRADICTORY_LATE_RESOLUTION",
+  "output_dir": "results/audit-restart-check",
+  "seed": 42,
+  "strategy": "restart",
+  "uncertainty_duration_ms": 5000,
+  "workflow_instance_id": "wf-42"
+}

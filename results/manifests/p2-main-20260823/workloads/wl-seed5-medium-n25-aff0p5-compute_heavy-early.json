@@ -1,0 +1,629 @@
+{
+  "edge_count": 58,
+  "edges": [
+    {
+      "child": "analysis_02",
+      "kind": "DATA",
+      "parent": "analysis_01"
+    },
+    {
+      "child": "analysis_03",
+      "kind": "DATA",
+      "parent": "analysis_02"
+    },
+    {
+      "child": "analysis_04",
+      "kind": "DATA",
+      "parent": "analysis_03"
+    },
+    {
+      "child": "analysis_05",
+      "kind": "DATA",
+      "parent": "analysis_04"
+    },
+    {
+      "child": "analysis_06",
+      "kind": "DATA",
+      "parent": "analysis_05"
+    },
+    {
+      "child": "analysis_07",
+      "kind": "DATA",
+      "parent": "analysis_06"
+    },
+    {
+      "child": "analysis_08",
+      "kind": "DATA",
+      "parent": "analysis_07"
+    },
+    {
+      "child": "analysis_09",
+      "kind": "DATA",
+      "parent": "analysis_08"
+    },
+    {
+      "child": "build_procurement_plan",
+      "kind": "DATA",
+      "parent": "analysis_09"
+    },
+    {
+      "child": "risky_analysis_01",
+      "kind": "DATA",
+      "parent": "analysis_09"
+    },
+    {
+      "child": "risky_analysis_02",
+      "kind": "DATA",
+      "parent": "analysis_09"
+    },
+    {
+      "child": "risky_analysis_03",
+      "kind": "DATA",
+      "parent": "analysis_09"
+    },
+    {
+      "child": "risky_analysis_04",
+      "kind": "DATA",
+      "parent": "analysis_09"
+    },
+    {
+      "child": "independent_suffix_01",
+      "kind": "DATA",
+      "parent": "calculate_tax"
+    },
+    {
+      "child": "independent_suffix_02",
+      "kind": "DATA",
+      "parent": "calculate_tax"
+    },
+    {
+      "child": "independent_suffix_03",
+      "kind": "DATA",
+      "parent": "calculate_tax"
+    },
+    {
+      "child": "independent_suffix_04",
+      "kind": "DATA",
+      "parent": "calculate_tax"
+    },
+    {
+      "child": "independent_suffix_05",
+      "kind": "DATA",
+      "parent": "calculate_tax"
+    },
+    {
+      "child": "risky_analysis_01",
+      "kind": "DATA",
+      "parent": "calculate_tax"
+    },
+    {
+      "child": "risky_analysis_02",
+      "kind": "DATA",
+      "parent": "calculate_tax"
+    },
+    {
+      "child": "risky_analysis_03",
+      "kind": "DATA",
+      "parent": "calculate_tax"
+    },
+    {
+      "child": "risky_analysis_04",
+      "kind": "DATA",
+      "parent": "calculate_tax"
+    },
+    {
+      "child": "reserve_a",
+      "kind": "DATA",
+      "parent": "check_a_stock"
+    },
+    {
+      "child": "analysis_01",
+      "kind": "CONTROL",
+      "parent": "choose_b"
+    },
+    {
+      "child": "analysis_02",
+      "kind": "CONTROL",
+      "parent": "choose_b"
+    },
+    {
+      "child": "analysis_03",
+      "kind": "CONTROL",
+      "parent": "choose_b"
+    },
+    {
+      "child": "analysis_04",
+      "kind": "CONTROL",
+      "parent": "choose_b"
+    },
+    {
+      "child": "analysis_05",
+      "kind": "CONTROL",
+      "parent": "choose_b"
+    },
+    {
+      "child": "analysis_06",
+      "kind": "CONTROL",
+      "parent": "choose_b"
+    },
+    {
+      "child": "analysis_07",
+      "kind": "CONTROL",
+      "parent": "choose_b"
+    },
+    {
+      "child": "analysis_08",
+      "kind": "CONTROL",
+      "parent": "choose_b"
+    },
+    {
+      "child": "analysis_09",
+      "kind": "CONTROL",
+      "parent": "choose_b"
+    },
+    {
+      "child": "reserve_b",
+      "kind": "CONTROL",
+      "parent": "choose_b"
+    },
+    {
+      "child": "risky_analysis_01",
+      "kind": "CONTROL",
+      "parent": "choose_b"
+    },
+    {
+      "child": "risky_analysis_02",
+      "kind": "CONTROL",
+      "parent": "choose_b"
+    },
+    {
+      "child": "risky_analysis_03",
+      "kind": "CONTROL",
+      "parent": "choose_b"
+    },
+    {
+      "child": "risky_analysis_04",
+      "kind": "CONTROL",
+      "parent": "choose_b"
+    },
+    {
+      "child": "build_procurement_plan",
+      "kind": "DATA",
+      "parent": "create_shipment"
+    },
+    {
+      "child": "independent_suffix_02",
+      "kind": "DATA",
+      "parent": "independent_suffix_01"
+    },
+    {
+      "child": "independent_suffix_03",
+      "kind": "DATA",
+      "parent": "independent_suffix_02"
+    },
+    {
+      "child": "independent_suffix_04",
+      "kind": "DATA",
+      "parent": "independent_suffix_03"
+    },
+    {
+      "child": "independent_suffix_05",
+      "kind": "DATA",
+      "parent": "independent_suffix_04"
+    },
+    {
+      "child": "analysis_01",
+      "kind": "DATA",
+      "parent": "independent_suffix_05"
+    },
+    {
+      "child": "analysis_02",
+      "kind": "DATA",
+      "parent": "independent_suffix_05"
+    },
+    {
+      "child": "analysis_03",
+      "kind": "DATA",
+      "parent": "independent_suffix_05"
+    },
+    {
+      "child": "analysis_04",
+      "kind": "DATA",
+      "parent": "independent_suffix_05"
+    },
+    {
+      "child": "analysis_05",
+      "kind": "DATA",
+      "parent": "independent_suffix_05"
+    },
+    {
+      "child": "analysis_06",
+      "kind": "DATA",
+      "parent": "independent_suffix_05"
+    },
+    {
+      "child": "analysis_07",
+      "kind": "DATA",
+      "parent": "independent_suffix_05"
+    },
+    {
+      "child": "analysis_08",
+      "kind": "DATA",
+      "parent": "independent_suffix_05"
+    },
+    {
+      "child": "analysis_09",
+      "kind": "DATA",
+      "parent": "independent_suffix_05"
+    },
+    {
+      "child": "build_procurement_plan",
+      "kind": "DATA",
+      "parent": "independent_suffix_05"
+    },
+    {
+      "child": "choose_b",
+      "kind": "ASSUMPTION",
+      "parent": "reserve_a"
+    },
+    {
+      "child": "create_shipment",
+      "kind": "DATA",
+      "parent": "reserve_b"
+    },
+    {
+      "child": "risky_analysis_02",
+      "kind": "DATA",
+      "parent": "risky_analysis_01"
+    },
+    {
+      "child": "risky_analysis_03",
+      "kind": "DATA",
+      "parent": "risky_analysis_02"
+    },
+    {
+      "child": "risky_analysis_04",
+      "kind": "DATA",
+      "parent": "risky_analysis_03"
+    },
+    {
+      "child": "build_procurement_plan",
+      "kind": "DATA",
+      "parent": "risky_analysis_04"
+    }
+  ],
+  "operation_count": 25,
+  "operations": [
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": true,
+      "dependencies": [],
+      "effect_class": "READ",
+      "method": "read_stock",
+      "name": "Read Supplier A stock",
+      "operation_id": "check_a_stock",
+      "service": "inventory"
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "check_a_stock"
+      ],
+      "effect_class": "COMPENSABLE",
+      "method": "reserve",
+      "name": "Reserve Supplier A quantity",
+      "operation_id": "reserve_a",
+      "service": "reservation"
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Calculate tax",
+      "operation_id": "calculate_tax",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "calculate_tax"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Independent suffix analysis 1",
+      "operation_id": "independent_suffix_01",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "independent_suffix_01"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Independent suffix analysis 2",
+      "operation_id": "independent_suffix_02",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "independent_suffix_02"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Independent suffix analysis 3",
+      "operation_id": "independent_suffix_03",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "independent_suffix_03"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Independent suffix analysis 4",
+      "operation_id": "independent_suffix_04",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "independent_suffix_04"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Independent suffix analysis 5",
+      "operation_id": "independent_suffix_05",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [
+        "reserve_a"
+      ],
+      "checkpoint_after": false,
+      "dependencies": [],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Choose fallback supplier B",
+      "operation_id": "choose_b",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "choose_b"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Valid fallback analytical record 1",
+      "operation_id": "analysis_01",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "analysis_01"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Valid fallback analytical record 2",
+      "operation_id": "analysis_02",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "analysis_02"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Valid fallback analytical record 3",
+      "operation_id": "analysis_03",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "analysis_03"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Valid fallback analytical record 4",
+      "operation_id": "analysis_04",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "analysis_04"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Valid fallback analytical record 5",
+      "operation_id": "analysis_05",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "analysis_05"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Valid fallback analytical record 6",
+      "operation_id": "analysis_06",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "analysis_06"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Valid fallback analytical record 7",
+      "operation_id": "analysis_07",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "analysis_07"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Valid fallback analytical record 8",
+      "operation_id": "analysis_08",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "analysis_08"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Valid fallback analytical record 9",
+      "operation_id": "analysis_09",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "choose_b",
+        "calculate_tax"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Supplier-dependent derived artifact 1",
+      "operation_id": "risky_analysis_01",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "risky_analysis_01",
+        "calculate_tax"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Supplier-dependent derived artifact 2",
+      "operation_id": "risky_analysis_02",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "risky_analysis_02",
+        "calculate_tax"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Supplier-dependent derived artifact 3",
+      "operation_id": "risky_analysis_03",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "risky_analysis_03",
+        "calculate_tax"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Supplier-dependent derived artifact 4",
+      "operation_id": "risky_analysis_04",
+      "service": null
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "choose_b"
+      ],
+      "effect_class": "COMPENSABLE",
+      "method": "reserve",
+      "name": "Reserve Supplier B quantity",
+      "operation_id": "reserve_b",
+      "service": "reservation"
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "reserve_b"
+      ],
+      "effect_class": "COMPENSABLE",
+      "method": "create",
+      "name": "Create shipment for chosen supplier",
+      "operation_id": "create_shipment",
+      "service": "shipment"
+    },
+    {
+      "assumption_dependencies": [],
+      "checkpoint_after": false,
+      "dependencies": [
+        "create_shipment",
+        "independent_suffix_05",
+        "analysis_09",
+        "risky_analysis_04"
+      ],
+      "effect_class": "PURE",
+      "method": null,
+      "name": "Build procurement plan",
+      "operation_id": "build_procurement_plan",
+      "service": null
+    }
+  ],
+  "topological_order": [
+    "check_a_stock",
+    "reserve_a",
+    "calculate_tax",
+    "independent_suffix_01",
+    "independent_suffix_02",
+    "independent_suffix_03",
+    "independent_suffix_04",
+    "independent_suffix_05",
+    "choose_b",
+    "analysis_01",
+    "analysis_02",
+    "analysis_03",
+    "analysis_04",
+    "analysis_05",
+    "analysis_06",
+    "analysis_07",
+    "analysis_08",
+    "analysis_09",
+    "risky_analysis_01",
+    "risky_analysis_02",
+    "risky_analysis_03",
+    "risky_analysis_04",
+    "reserve_b",
+    "create_shipment",
+    "build_procurement_plan"
+  ],
+  "workflow_id": "procurement-p1-generated-mixed-medium-25-early"
+}
