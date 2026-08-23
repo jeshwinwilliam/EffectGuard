@@ -331,6 +331,38 @@ def execute_recovery_plan(env, plan) -> RecoveryStatus:
                 observed_status="SUCCESS",
                 compensation_indicator=False,
             )
+        elif action.operation_id.startswith(("analysis_", "independent_")):
+            env.runtime_log.append(
+                event_type="recomputation_started",
+                sim_time_ms=env.clock.peek(),
+                run_id=env.runtime.run_id,
+                seed=env.config.seed,
+                workflow_id=env.workflow.workflow_id,
+                workflow_instance_id=env.config.workflow_instance_id,
+                strategy=env.config.strategy,
+                operation_id=action.operation_id,
+                operation_type="recovery",
+                effect_class="PURE",
+                attempt=0,
+                observed_status="PENDING",
+                compensation_indicator=False,
+            )
+            env.op_generic_pure(action.operation_id, recovery=True)
+            env.runtime_log.append(
+                event_type="recomputation_completed",
+                sim_time_ms=env.clock.peek(),
+                run_id=env.runtime.run_id,
+                seed=env.config.seed,
+                workflow_id=env.workflow.workflow_id,
+                workflow_instance_id=env.config.workflow_instance_id,
+                strategy=env.config.strategy,
+                operation_id=action.operation_id,
+                operation_type="recovery",
+                effect_class="PURE",
+                attempt=0,
+                observed_status="SUCCESS",
+                compensation_indicator=False,
+            )
     env.recovery_status = RecoveryStatus.RECOVERED
     env.runtime_log.append(
         event_type="recovery_completed",

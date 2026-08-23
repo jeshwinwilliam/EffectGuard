@@ -12,7 +12,7 @@ def evaluate_validity(
 ) -> ValidityEvaluation:
     if operation_id == "calculate_tax":
         return ValidityEvaluation(operation_id=operation_id, result=ValidityResult.VALID, reason="tax is independent")
-    if operation_id in {"record_audit", "record_finance_snapshot", "supplier_annotation"}:
+    if operation_id in {"record_audit", "record_finance_snapshot", "supplier_annotation"} or operation_id.startswith(("analysis_", "independent_")):
         return ValidityEvaluation(
             operation_id=operation_id,
             result=ValidityResult.VALID,

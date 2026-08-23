@@ -100,6 +100,8 @@ class Oracle:
             "procurement-p1-multi-dependency",
         } and failure_position == "reserve_a":
             return ("choose_b", "reserve_b", "create_shipment", "build_procurement_plan")
+        if self.workflow.workflow_id.startswith("procurement-p1-generated-") and failure_position == "reserve_a":
+            return ("choose_b", "reserve_b", "create_shipment", "build_procurement_plan")
         if self.workflow.workflow_id == "procurement-p1-irreversible" and failure_position == "reserve_a":
             return ("choose_b", "reserve_b", "create_shipment", "send_notification", "build_procurement_plan")
         return ()

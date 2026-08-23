@@ -23,7 +23,6 @@ from ..services.payment import PaymentService
 from ..services.reservation import ReservationService
 from ..services.shipment import ShipmentService
 from ..workflow.engine import RuntimeState, stable_sha256_key
-from ..workflow.procurement import build_procurement_p1_workflow, build_procurement_workflow
 
 
 @dataclass
@@ -320,6 +319,31 @@ class RunEnvironment:
             **self._metadata_for(ctx.operation_id),
         )
 
+    def op_generic_pure(self, operation_id: str, *, recovery: bool = False) -> None:
+        started = self.runtime.begin_tracking()
+        ctx = self.runtime.next_context(
+            operation_id=operation_id,
+            sim_time_ms=self.clock.peek(),
+            idempotency_key=None,
+        )
+        self.runtime.end_tracking(started)
+        if recovery:
+            self.replayed_operations += 1
+            self.operations_recomputed += 1
+        if operation_id.startswith("analysis_"):
+            value = {"message": f"{operation_id} recorded", "supplier_id": "B", "kind": "analysis"}
+        else:
+            value = {"message": f"{operation_id} computed", "kind": "independent"}
+        self.runtime.operation_results[operation_id] = value
+        self.runtime_log.append(
+            event_type="operation",
+            sim_time_ms=self.clock.peek(),
+            attempt=ctx.attempt,
+            observed_status="SUCCESS",
+            recovery=recovery,
+            **self._metadata_for(ctx.operation_id),
+        )
+
     def op_create_shipment(self, *, supplier_id: str, recovery: bool = False) -> None:
         logical_args = {"supplier_id": supplier_id, "sku": "SKU-1", "quantity": self.required_quantity}
         key = stable_sha256_key(
@@ -486,6 +510,12 @@ class RunEnvironment:
                     **self._metadata_for("reserve_a"),
                 )
         return False
+
+    def independent_operation_ids(self) -> list[str]:
+        return [operation_id for operation_id in self.workflow.order if operation_id.startswith("independent_")]
+
+    def analysis_operation_ids(self) -> list[str]:
+        return [operation_id for operation_id in self.workflow.order if operation_id.startswith("analysis_")]
 
     def validity_metadata_bytes(self) -> int:
         payload = {

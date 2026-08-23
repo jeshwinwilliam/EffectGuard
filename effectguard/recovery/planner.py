@@ -63,8 +63,10 @@ def build_dependency_only_plan(env) -> RecoveryPlan:
         RecoveryAction(action_type=RecoveryActionType.REEXECUTE, operation_id="create_shipment", target_supplier_id="A", reason="recreate shipment on A"),
         RecoveryAction(action_type=RecoveryActionType.RECOMPUTE, operation_id="build_procurement_plan", target_supplier_id="A", reason="rebuild final plan"),
     ]
-    for operation_id in ("record_audit", "record_finance_snapshot", "supplier_annotation"):
-        if operation_id in invalidated:
+    for operation_id in invalidated:
+        if operation_id in {"choose_b", "reserve_b", "create_shipment", "build_procurement_plan", "send_notification"}:
+            continue
+        if env.workflow.operations[operation_id].effect_class.value == "PURE":
             recomputation_actions.append(
                 RecoveryAction(
                     action_type=RecoveryActionType.RECOMPUTE,
@@ -97,6 +99,8 @@ def build_effectguard_plan(env) -> RecoveryPlan:
         operation_ids.append("record_finance_snapshot")
     if "supplier_annotation" in env.workflow.operations:
         operation_ids.append("supplier_annotation")
+    operation_ids.extend(env.independent_operation_ids())
+    operation_ids.extend(env.analysis_operation_ids())
     if "send_notification" in env.workflow.operations:
         operation_ids.append("send_notification")
     evaluations = [

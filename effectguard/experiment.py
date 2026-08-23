@@ -6,7 +6,6 @@ from pathlib import Path
 from statistics import mean
 from time import perf_counter_ns
 from typing import Sequence
-import json
 
 from .baselines import run_blocking, run_checkpoint, run_dependency_only, run_effectguard, run_restart
 from .baselines.base import RunEnvironment, build_run_id
@@ -29,6 +28,7 @@ from .workflow.procurement import (
     build_procurement_p1_workflow,
     build_procurement_workflow,
 )
+from .workflow.generated import build_generated_procurement_workflow
 
 
 def create_environment(config: TrialConfig) -> RunEnvironment:
@@ -42,7 +42,12 @@ def create_environment(config: TrialConfig) -> RunEnvironment:
     shipments = ShipmentService()
     payments = PaymentService()
     notifications = NotificationService()
-    if config.workflow_variant == "p1_selective":
+    if config.dependency_density != "canonical" or config.workflow_size != 8:
+        workflow = build_generated_procurement_workflow(
+            dependency_density=config.dependency_density,
+            workflow_size=config.workflow_size,
+        )
+    elif config.workflow_variant == "p1_selective":
         workflow = build_procurement_p1_selective_workflow()
     elif config.workflow_variant == "p1_selective_double":
         workflow = build_procurement_p1_selective_double_workflow()

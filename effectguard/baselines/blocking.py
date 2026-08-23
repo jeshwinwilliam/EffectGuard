@@ -8,6 +8,8 @@ def run_blocking(env: RunEnvironment) -> None:
     env.op_check_a_stock()
     reserve_status = env.op_reserve_a()
     env.op_calculate_tax()
+    for operation_id in env.independent_operation_ids():
+        env.op_generic_pure(operation_id)
     if reserve_status is ObservedStatus.UNKNOWN:
         backoff = 50
         while True:
