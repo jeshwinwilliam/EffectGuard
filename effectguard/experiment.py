@@ -72,8 +72,9 @@ class ExperimentRunner:
             duplicate_effects=env.oracle.duplicate_effects(),
             recovery_amplification=compute_recovery_amplification(
                 runtime_replayed_operations=env.replayed_operations,
-                oracle_minimal_recovery_set=invariant.recovery_denominator,
+                graph_affected_operations=invariant.graph_affected_operations,
             ),
+            graph_affected_operations=invariant.graph_affected_operations,
             recovery_latency_ms=env.clock.peek(),
             late_recovery_latency_ms=env.late_recovery_latency_ms,
             repeated_external_calls=env.repeated_external_calls,
@@ -87,6 +88,8 @@ class ExperimentRunner:
         return RunArtifacts(
             runtime_events=env.runtime_log.events(),
             oracle_events=env.oracle_log.events(),
+            final_oracle_snapshot=env.oracle.snapshot().to_dict(),
+            final_plan=env.final_plan,
             metrics=metrics,
         )
 

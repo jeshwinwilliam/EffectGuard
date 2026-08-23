@@ -317,7 +317,13 @@ How many actual external side effects were physically duplicated. This is strict
 
 ### Recovery Amplification
 
-How much extra runtime work a strategy performed relative to the oracle analysis denominator derived from the affected workflow region.
+How much extra runtime work a strategy performed relative to a **graph-based affected-operation count** derived from workflow descendants.
+
+In P0, this denominator is an approximation based on the dependency graph, not a final semantic definition of the minimal invalidated set. In other words:
+
+- graph descendant does not necessarily mean semantically invalid operation
+- P0 reports a useful structural baseline, not the final research definition
+- later phases must distinguish graph reachability from true semantic invalidation
 
 ### Recovery Latency
 
@@ -377,6 +383,32 @@ These boundaries matter for research integrity:
 - the experiment must remain deterministic
 - incorrect coarse-baseline outcomes must not be hidden by slipping in automatic compensation logic
 
+## P0 Implementation Boundary
+
+P0 does implement:
+
+- deterministic workflow simulation
+- an external-state oracle
+- runtime versus ground-truth separation
+- fault injection
+- full restart baseline
+- checkpoint or suffix replay baseline
+- blocking verification baseline
+- reproducibility controls
+- invariant evaluation
+- experiment metrics
+
+P0 does not implement:
+
+- EffectGuard selective recovery
+- uncertainty-aware selective recovery planning
+- semantic dependency validity analysis
+- minimal recovery-set computation
+- effect-aware selective compensation
+- invalidated-subgraph repair
+- LLM-based dependency inference
+- any claim that EffectGuard has already been experimentally validated as a complete solution
+
 ## Limitations
 
 - the workflow is intentionally narrow
@@ -389,6 +421,8 @@ These boundaries matter for research integrity:
 ## Research Integrity Note
 
 This README and the implementation in this repository were written from the project requirements in this codebase and authored in original wording. The design is informed by distributed-systems ideas and research concepts, but the prose, code, diagrams, and explanations here are written specifically for this repository rather than copied from an external paper, framework, or tutorial.
+
+See [THIRD_PARTY_NOTICES.md](/Users/jeshwinwilliam/Documents/Playground/EffectGuard/THIRD_PARTY_NOTICES.md) for the distinction between conceptual influences, actual dependencies, and original EffectGuard implementation work.
 
 ## Quick Next Steps
 

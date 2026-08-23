@@ -76,6 +76,23 @@ class RunEnvironment:
         else:
             self.call_identities.add(identity)
 
+    def _metadata_for(self, operation_id: str) -> dict[str, object]:
+        operation = self.workflow.operations[operation_id]
+        return {
+            "run_id": self.runtime.run_id,
+            "seed": self.config.seed,
+            "workflow_id": self.workflow.workflow_id,
+            "workflow_instance_id": self.config.workflow_instance_id,
+            "strategy": self.config.strategy,
+            "operation_id": operation_id,
+            "operation_name": operation.name,
+            "operation_type": operation.service or "internal",
+            "effect_class": operation.effect_class.value,
+            "dependencies": list(operation.dependencies),
+            "assumption_dependencies": list(operation.assumption_dependencies),
+            "compensation_indicator": False,
+        }
+
     def op_check_a_stock(self, *, recovery: bool = False) -> None:
         started = self.runtime.begin_tracking()
         ctx = self.runtime.next_context(operation_id="check_a_stock", sim_time_ms=self.clock.peek(), idempotency_key=None)
@@ -84,7 +101,13 @@ class RunEnvironment:
             self.replayed_operations += 1
         stock = self.inventory.read_stock(supplier_id="A", sku="SKU-1")
         self.runtime.operation_results["check_a_stock"] = stock
-        self.runtime_log.append(event_type="operation", sim_time_ms=self.clock.peek(), operation_id=ctx.operation_id, attempt=ctx.attempt, observed_status="SUCCESS")
+        self.runtime_log.append(
+            event_type="operation",
+            sim_time_ms=self.clock.peek(),
+            attempt=ctx.attempt,
+            observed_status="SUCCESS",
+            **self._metadata_for(ctx.operation_id),
+        )
 
     def _reserve(self, *, supplier_id: str, operation_id: str, recovery: bool = False) -> ObservedStatus:
         logical_args = {"supplier_id": supplier_id, "sku": "SKU-1", "quantity": self.required_quantity}
@@ -111,13 +134,18 @@ class RunEnvironment:
         self.runtime_log.append(
             event_type="operation",
             sim_time_ms=self.clock.peek(),
-            operation_id=operation_id,
             attempt=ctx.attempt,
             observed_status=result.observed_status.value,
+            idempotency_key=key,
+            recovery=recovery,
+            **self._metadata_for(operation_id),
         )
         self.oracle_log.append(
             event_type="oracle_snapshot",
             sim_time_ms=self.clock.peek(),
+            run_id=self.runtime.run_id,
+            workflow_id=self.workflow.workflow_id,
+            workflow_instance_id=self.config.workflow_instance_id,
             operation_id=operation_id,
             snapshot=self.oracle.snapshot().to_dict(),
         )
@@ -151,7 +179,14 @@ class RunEnvironment:
         if recovery:
             self.replayed_operations += 1
         self.runtime.operation_results["calculate_tax"] = {"tax_minor": 375}
-        self.runtime_log.append(event_type="operation", sim_time_ms=self.clock.peek(), operation_id=ctx.operation_id, attempt=ctx.attempt, observed_status="SUCCESS")
+        self.runtime_log.append(
+            event_type="operation",
+            sim_time_ms=self.clock.peek(),
+            attempt=ctx.attempt,
+            observed_status="SUCCESS",
+            recovery=recovery,
+            **self._metadata_for(ctx.operation_id),
+        )
 
     def op_choose_b(self) -> None:
         started = self.runtime.begin_tracking()
@@ -161,7 +196,14 @@ class RunEnvironment:
         uncertainty = self.runtime.uncertainties["reserve_a"]
         uncertainty.assumed_status = ObservedStatus.FAILURE
         uncertainty.assumption_at_ms = self.clock.peek()
-        self.runtime_log.append(event_type="assumption", sim_time_ms=self.clock.peek(), operation_id=ctx.operation_id, assumed_status="FAILURE")
+        self.runtime_log.append(
+            event_type="assumption",
+            sim_time_ms=self.clock.peek(),
+            attempt=ctx.attempt,
+            observed_status="UNKNOWN",
+            assumption="FAILURE",
+            **self._metadata_for(ctx.operation_id),
+        )
 
     def op_build_plan(self, *, supplier_id: str, recovery: bool = False) -> None:
         started = self.runtime.begin_tracking()
@@ -175,7 +217,14 @@ class RunEnvironment:
             "quantity": self.required_quantity,
             "tax_minor": 375,
         }
-        self.runtime_log.append(event_type="operation", sim_time_ms=self.clock.peek(), operation_id=ctx.operation_id, attempt=ctx.attempt, observed_status="SUCCESS")
+        self.runtime_log.append(
+            event_type="operation",
+            sim_time_ms=self.clock.peek(),
+            attempt=ctx.attempt,
+            observed_status="SUCCESS",
+            recovery=recovery,
+            **self._metadata_for(ctx.operation_id),
+        )
 
     def verify_reserve_a(self) -> ObservedStatus:
         key = stable_sha256_key(
@@ -185,8 +234,23 @@ class RunEnvironment:
         )
         self.verification_reads += 1
         result = self.reservations.verify_by_key(idempotency_key=key)
-        self.runtime_log.append(event_type="verification", sim_time_ms=self.clock.peek(), operation_id="reserve_a", observed_status=result.observed_status.value)
-        self.oracle_log.append(event_type="oracle_snapshot", sim_time_ms=self.clock.peek(), operation_id="reserve_a", snapshot=self.oracle.snapshot().to_dict())
+        self.runtime_log.append(
+            event_type="verification",
+            sim_time_ms=self.clock.peek(),
+            attempt=self.runtime.operation_attempts.get("reserve_a", 0),
+            observed_status=result.observed_status.value,
+            idempotency_key=key,
+            **self._metadata_for("reserve_a"),
+        )
+        self.oracle_log.append(
+            event_type="oracle_snapshot",
+            sim_time_ms=self.clock.peek(),
+            run_id=self.runtime.run_id,
+            workflow_id=self.workflow.workflow_id,
+            workflow_instance_id=self.config.workflow_instance_id,
+            operation_id="reserve_a",
+            snapshot=self.oracle.snapshot().to_dict(),
+        )
         return result.observed_status
 
     def detect_contradiction_if_any(self) -> bool:
@@ -197,7 +261,14 @@ class RunEnvironment:
             self.runtime.contradiction_time_ms = self.clock.peek()
             uncertainty.resolved_status = ObservedStatus.SUCCESS
             uncertainty.resolved_at_ms = self.clock.peek()
-            self.runtime_log.append(event_type="contradiction", sim_time_ms=self.clock.peek(), operation_id="reserve_a", observed_status="SUCCESS")
+            self.runtime_log.append(
+                event_type="contradiction",
+                sim_time_ms=self.clock.peek(),
+                attempt=self.runtime.operation_attempts.get("reserve_a", 0),
+                observed_status="SUCCESS",
+                assumption="FAILURE",
+                **self._metadata_for("reserve_a"),
+            )
             return True
         return False
 

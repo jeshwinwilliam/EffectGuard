@@ -252,6 +252,7 @@ class TrialMetrics:
     final_state_correct: bool
     duplicate_effects: int
     recovery_amplification: float | None
+    graph_affected_operations: int
     recovery_latency_ms: int
     late_recovery_latency_ms: int | None
     repeated_external_calls: int
@@ -270,12 +271,15 @@ class TrialMetrics:
 class InvariantResult:
     ok: bool
     messages: tuple[str, ...]
-    recovery_denominator: int
+    graph_affected_operations: int
+    affected_operations: tuple[str, ...]
+    unaffected_operations: tuple[str, ...]
 
 
 @dataclass(frozen=True)
 class RunArtifacts:
     runtime_events: list[dict[str, object]]
     oracle_events: list[dict[str, object]]
+    final_oracle_snapshot: dict[str, object]
+    final_plan: dict[str, object] | None
     metrics: TrialMetrics
-

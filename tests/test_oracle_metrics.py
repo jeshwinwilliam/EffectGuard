@@ -81,5 +81,17 @@ def test_duplicate_effect_counting_uses_actual_effects() -> None:
 
 
 def test_recovery_amplification_formula_and_zero_denominator() -> None:
-    assert compute_recovery_amplification(runtime_replayed_operations=4, oracle_minimal_recovery_set=2) == 2
-    assert compute_recovery_amplification(runtime_replayed_operations=4, oracle_minimal_recovery_set=0) is None
+    assert compute_recovery_amplification(runtime_replayed_operations=4, graph_affected_operations=2) == 2
+    assert compute_recovery_amplification(runtime_replayed_operations=4, graph_affected_operations=0) is None
+
+
+def test_g2_graph_affected_and_unaffected_sets_are_explicit() -> None:
+    _inventory, _reservations, oracle = _oracle_world()
+    invariant = oracle.evaluate(final_plan=None, failure_position="reserve_a")
+    assert invariant.affected_operations == (
+        "build_procurement_plan",
+        "choose_b",
+        "reserve_a",
+        "reserve_b",
+    )
+    assert "calculate_tax" in invariant.unaffected_operations

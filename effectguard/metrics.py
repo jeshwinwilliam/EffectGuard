@@ -5,10 +5,10 @@ from statistics import mean, median
 from .models import TrialMetrics
 
 
-def compute_recovery_amplification(*, runtime_replayed_operations: int, oracle_minimal_recovery_set: int) -> float | None:
-    if oracle_minimal_recovery_set == 0:
+def compute_recovery_amplification(*, runtime_replayed_operations: int, graph_affected_operations: int) -> float | None:
+    if graph_affected_operations == 0:
         return None
-    return runtime_replayed_operations / oracle_minimal_recovery_set
+    return runtime_replayed_operations / graph_affected_operations
 
 
 def summarise_metrics(metrics: list[TrialMetrics]) -> list[dict[str, object]]:

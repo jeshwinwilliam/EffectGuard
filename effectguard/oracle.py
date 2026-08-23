@@ -60,6 +60,14 @@ class Oracle:
     def active_reservations(self) -> list[ReservationView]:
         return self.reservations.list_active()
 
+    def graph_affected_operations(self, failure_position: str) -> tuple[str, ...]:
+        operations = self.workflow.dependency_graph.descendants(failure_position) | {failure_position}
+        return tuple(sorted(operations))
+
+    def unaffected_operations(self, failure_position: str) -> tuple[str, ...]:
+        affected = set(self.graph_affected_operations(failure_position))
+        return tuple(sorted(operation_id for operation_id in self.workflow.operations if operation_id not in affected))
+
     def evaluate(self, *, final_plan: dict[str, object] | None, failure_position: str) -> InvariantResult:
         messages: list[str] = []
         active = self.active_reservations()
@@ -80,5 +88,11 @@ class Oracle:
             if supplier != active[0].supplier_id:
                 messages.append("plan does not refer to the active reservation")
 
-        denominator = len(self.workflow.dependency_graph.descendants(failure_position) | {failure_position})
-        return InvariantResult(ok=not messages, messages=tuple(messages), recovery_denominator=denominator)
+        affected = self.graph_affected_operations(failure_position)
+        return InvariantResult(
+            ok=not messages,
+            messages=tuple(messages),
+            graph_affected_operations=len(affected),
+            affected_operations=affected,
+            unaffected_operations=self.unaffected_operations(failure_position),
+        )

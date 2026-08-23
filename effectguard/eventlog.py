@@ -35,6 +35,11 @@ class EventLog:
     def events(self) -> list[dict[str, object]]:
         return list(self._events)
 
+    def last_event(self) -> dict[str, object] | None:
+        if not self._events:
+            return None
+        return dict(self._events[-1])
+
     def write_jsonl(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("w", encoding="utf-8") as handle:
