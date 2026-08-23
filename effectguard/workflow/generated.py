@@ -3,15 +3,39 @@ from __future__ import annotations
 from ..models import DependencyGraph, DependencyKind, EffectClass, Operation, Workflow
 
 
-def build_generated_procurement_workflow(*, dependency_density: str, workflow_size: int) -> Workflow:
+def _split_independent_counts(*, total: int, failure_position_category: str) -> tuple[int, int]:
+    if failure_position_category == "early":
+        return 0, total
+    if failure_position_category == "middle":
+        prefix = total // 2
+        return prefix, total - prefix
+    if failure_position_category == "late":
+        return total, 0
+    raise ValueError(f"unsupported failure_position_category {failure_position_category}")
+
+
+def build_generated_procurement_workflow(
+    *,
+    dependency_density: str,
+    workflow_size: int,
+    independent_branch_fraction: float | None = None,
+    failure_position_category: str = "early",
+) -> Workflow:
     if workflow_size < 8:
         raise ValueError("generated procurement workflows require workflow_size >= 8")
     if dependency_density not in {"sparse", "medium", "dense"}:
         raise ValueError(f"unsupported dependency_density {dependency_density}")
 
     extra_nodes = workflow_size - 7
-    independent_count = max(1, extra_nodes // 2)
+    if independent_branch_fraction is None:
+        independent_count = max(1, extra_nodes // 2)
+    else:
+        independent_count = max(1, min(extra_nodes - 1, round(extra_nodes * independent_branch_fraction)))
     analysis_count = extra_nodes - independent_count
+    prefix_independent_count, suffix_independent_count = _split_independent_counts(
+        total=independent_count,
+        failure_position_category=failure_position_category,
+    )
 
     operations: dict[str, Operation] = {
         "check_a_stock": Operation(
@@ -71,20 +95,37 @@ def build_generated_procurement_workflow(*, dependency_density: str, workflow_si
         ),
     }
 
-    independent_ids: list[str] = []
-    for index in range(independent_count):
-        operation_id = f"independent_{index + 1:02d}"
-        dependencies = ("calculate_tax",) if index == 0 else (independent_ids[-1],)
+    prefix_independent_ids: list[str] = []
+    for index in range(prefix_independent_count):
+        operation_id = f"independent_prefix_{index + 1:02d}"
+        dependencies = ("check_a_stock",) if index == 0 else (prefix_independent_ids[-1],)
         operations[operation_id] = Operation(
             operation_id=operation_id,
-            name=f"Independent analysis {index + 1}",
+            name=f"Independent prefix analysis {index + 1}",
             effect_class=EffectClass.PURE,
             service=None,
             method=None,
             dependencies=dependencies,
             checkpoint_after=False,
         )
-        independent_ids.append(operation_id)
+        prefix_independent_ids.append(operation_id)
+
+    suffix_independent_ids: list[str] = []
+    for index in range(suffix_independent_count):
+        operation_id = f"independent_suffix_{index + 1:02d}"
+        dependencies = ("calculate_tax",) if index == 0 else (suffix_independent_ids[-1],)
+        operations[operation_id] = Operation(
+            operation_id=operation_id,
+            name=f"Independent suffix analysis {index + 1}",
+            effect_class=EffectClass.PURE,
+            service=None,
+            method=None,
+            dependencies=dependencies,
+            checkpoint_after=False,
+        )
+        suffix_independent_ids.append(operation_id)
+
+    independent_ids = [*prefix_independent_ids, *suffix_independent_ids]
 
     analysis_ids: list[str] = []
     for index in range(analysis_count):
@@ -101,7 +142,7 @@ def build_generated_procurement_workflow(*, dependency_density: str, workflow_si
         )
         analysis_ids.append(operation_id)
 
-    build_dependencies: list[str] = ["create_shipment", independent_ids[-1] if independent_ids else "calculate_tax"]
+    build_dependencies: list[str] = ["create_shipment", suffix_independent_ids[-1] if suffix_independent_ids else "calculate_tax"]
     if analysis_ids:
         build_dependencies.append(analysis_ids[-1])
     operations["build_procurement_plan"] = Operation(
@@ -122,31 +163,39 @@ def build_generated_procurement_workflow(*, dependency_density: str, workflow_si
     graph.add_edge("choose_b", "reserve_b", DependencyKind.CONTROL)
     graph.add_edge("reserve_b", "create_shipment", DependencyKind.DATA)
     graph.add_edge("create_shipment", "build_procurement_plan", DependencyKind.DATA)
-    graph.add_edge("calculate_tax", independent_ids[0] if independent_ids else "build_procurement_plan", DependencyKind.DATA)
+    if suffix_independent_ids:
+        graph.add_edge("calculate_tax", suffix_independent_ids[0], DependencyKind.DATA)
 
-    for index, operation_id in enumerate(independent_ids):
+    for index, operation_id in enumerate(prefix_independent_ids):
         if index > 0:
-            graph.add_edge(independent_ids[index - 1], operation_id, DependencyKind.DATA)
+            graph.add_edge(prefix_independent_ids[index - 1], operation_id, DependencyKind.DATA)
+        if dependency_density == "dense":
+            for earlier in prefix_independent_ids[:index]:
+                graph.add_edge(earlier, operation_id, DependencyKind.DATA)
+
+    for index, operation_id in enumerate(suffix_independent_ids):
+        if index > 0:
+            graph.add_edge(suffix_independent_ids[index - 1], operation_id, DependencyKind.DATA)
         if dependency_density in {"medium", "dense"}:
             graph.add_edge("calculate_tax", operation_id, DependencyKind.DATA)
         if dependency_density == "dense":
-            for earlier in independent_ids[:index]:
+            for earlier in suffix_independent_ids[:index]:
                 graph.add_edge(earlier, operation_id, DependencyKind.DATA)
 
     for index, operation_id in enumerate(analysis_ids):
         graph.add_edge("choose_b", operation_id, DependencyKind.CONTROL)
         if index > 0:
             graph.add_edge(analysis_ids[index - 1], operation_id, DependencyKind.DATA)
-        if dependency_density in {"medium", "dense"} and independent_ids:
-            graph.add_edge(independent_ids[-1], operation_id, DependencyKind.DATA)
+        if dependency_density in {"medium", "dense"} and suffix_independent_ids:
+            graph.add_edge(suffix_independent_ids[-1], operation_id, DependencyKind.DATA)
         if dependency_density == "dense":
             for earlier in analysis_ids[:index]:
                 graph.add_edge(earlier, operation_id, DependencyKind.DATA)
             for independent_id in independent_ids:
                 graph.add_edge(independent_id, operation_id, DependencyKind.DATA)
 
-    if independent_ids:
-        graph.add_edge(independent_ids[-1], "build_procurement_plan", DependencyKind.DATA)
+    if suffix_independent_ids:
+        graph.add_edge(suffix_independent_ids[-1], "build_procurement_plan", DependencyKind.DATA)
     else:
         graph.add_edge("calculate_tax", "build_procurement_plan", DependencyKind.DATA)
     for analysis_id in analysis_ids:
@@ -157,9 +206,10 @@ def build_generated_procurement_workflow(*, dependency_density: str, workflow_si
 
     order = (
         "check_a_stock",
+        *prefix_independent_ids,
         "reserve_a",
         "calculate_tax",
-        *independent_ids,
+        *suffix_independent_ids,
         "choose_b",
         *analysis_ids,
         "reserve_b",
@@ -167,23 +217,39 @@ def build_generated_procurement_workflow(*, dependency_density: str, workflow_si
         "build_procurement_plan",
     )
     return Workflow(
-        workflow_id=f"procurement-p1-generated-{dependency_density}-{workflow_size}",
+        workflow_id=f"procurement-p1-generated-{dependency_density}-{workflow_size}-{failure_position_category}",
         operations=operations,
         order=order,
         dependency_graph=graph,
     )
 
 
-def build_generated_mixed_procurement_workflow(*, dependency_density: str, workflow_size: int) -> Workflow:
+def build_generated_mixed_procurement_workflow(
+    *,
+    dependency_density: str,
+    workflow_size: int,
+    affected_fraction_target: float | None = None,
+    independent_branch_fraction: float | None = None,
+    failure_position_category: str = "early",
+) -> Workflow:
     if workflow_size < 10:
         raise ValueError("mixed generated procurement workflows require workflow_size >= 10")
     if dependency_density not in {"sparse", "medium", "dense"}:
         raise ValueError(f"unsupported dependency_density {dependency_density}")
 
     extra_nodes = workflow_size - 7
-    independent_count = max(1, extra_nodes // 3)
-    valid_count = max(1, (extra_nodes - independent_count) // 2)
-    risky_count = extra_nodes - independent_count - valid_count
+    if independent_branch_fraction is None:
+        independent_count = max(1, extra_nodes // 3)
+    else:
+        independent_count = max(1, min(extra_nodes - 2, round(extra_nodes * independent_branch_fraction)))
+    descendant_extra = extra_nodes - independent_count
+    target = 0.50 if affected_fraction_target is None else affected_fraction_target
+    risky_count = max(1, min(descendant_extra - 1, round(target * (descendant_extra + 4)) - 4))
+    valid_count = max(1, descendant_extra - risky_count)
+    prefix_independent_count, suffix_independent_count = _split_independent_counts(
+        total=independent_count,
+        failure_position_category=failure_position_category,
+    )
 
     operations: dict[str, Operation] = {
         "check_a_stock": Operation(
@@ -243,20 +309,37 @@ def build_generated_mixed_procurement_workflow(*, dependency_density: str, workf
         ),
     }
 
-    independent_ids: list[str] = []
-    for index in range(independent_count):
-        operation_id = f"independent_{index + 1:02d}"
-        dependencies = ("calculate_tax",) if index == 0 else (independent_ids[-1],)
+    prefix_independent_ids: list[str] = []
+    for index in range(prefix_independent_count):
+        operation_id = f"independent_prefix_{index + 1:02d}"
+        dependencies = ("check_a_stock",) if index == 0 else (prefix_independent_ids[-1],)
         operations[operation_id] = Operation(
             operation_id=operation_id,
-            name=f"Independent analysis {index + 1}",
+            name=f"Independent prefix analysis {index + 1}",
             effect_class=EffectClass.PURE,
             service=None,
             method=None,
             dependencies=dependencies,
             checkpoint_after=False,
         )
-        independent_ids.append(operation_id)
+        prefix_independent_ids.append(operation_id)
+
+    suffix_independent_ids: list[str] = []
+    for index in range(suffix_independent_count):
+        operation_id = f"independent_suffix_{index + 1:02d}"
+        dependencies = ("calculate_tax",) if index == 0 else (suffix_independent_ids[-1],)
+        operations[operation_id] = Operation(
+            operation_id=operation_id,
+            name=f"Independent suffix analysis {index + 1}",
+            effect_class=EffectClass.PURE,
+            service=None,
+            method=None,
+            dependencies=dependencies,
+            checkpoint_after=False,
+        )
+        suffix_independent_ids.append(operation_id)
+
+    independent_ids = [*prefix_independent_ids, *suffix_independent_ids]
 
     valid_ids: list[str] = []
     for index in range(valid_count):
@@ -288,7 +371,7 @@ def build_generated_mixed_procurement_workflow(*, dependency_density: str, workf
         )
         risky_ids.append(operation_id)
 
-    build_dependencies: list[str] = ["create_shipment", independent_ids[-1] if independent_ids else "calculate_tax"]
+    build_dependencies: list[str] = ["create_shipment", suffix_independent_ids[-1] if suffix_independent_ids else "calculate_tax"]
     if valid_ids:
         build_dependencies.append(valid_ids[-1])
     if risky_ids:
@@ -312,23 +395,30 @@ def build_generated_mixed_procurement_workflow(*, dependency_density: str, workf
     graph.add_edge("reserve_b", "create_shipment", DependencyKind.DATA)
     graph.add_edge("create_shipment", "build_procurement_plan", DependencyKind.DATA)
 
-    if independent_ids:
-        graph.add_edge("calculate_tax", independent_ids[0], DependencyKind.DATA)
-    for index, operation_id in enumerate(independent_ids):
+    if suffix_independent_ids:
+        graph.add_edge("calculate_tax", suffix_independent_ids[0], DependencyKind.DATA)
+    for index, operation_id in enumerate(prefix_independent_ids):
         if index > 0:
-            graph.add_edge(independent_ids[index - 1], operation_id, DependencyKind.DATA)
+            graph.add_edge(prefix_independent_ids[index - 1], operation_id, DependencyKind.DATA)
+        if dependency_density == "dense":
+            for earlier in prefix_independent_ids[:index]:
+                graph.add_edge(earlier, operation_id, DependencyKind.DATA)
+
+    for index, operation_id in enumerate(suffix_independent_ids):
+        if index > 0:
+            graph.add_edge(suffix_independent_ids[index - 1], operation_id, DependencyKind.DATA)
         if dependency_density in {"medium", "dense"}:
             graph.add_edge("calculate_tax", operation_id, DependencyKind.DATA)
         if dependency_density == "dense":
-            for earlier in independent_ids[:index]:
+            for earlier in suffix_independent_ids[:index]:
                 graph.add_edge(earlier, operation_id, DependencyKind.DATA)
 
     for index, operation_id in enumerate(valid_ids):
         graph.add_edge("choose_b", operation_id, DependencyKind.CONTROL)
         if index > 0:
             graph.add_edge(valid_ids[index - 1], operation_id, DependencyKind.DATA)
-        if dependency_density in {"medium", "dense"} and independent_ids:
-            graph.add_edge(independent_ids[-1], operation_id, DependencyKind.DATA)
+        if dependency_density in {"medium", "dense"} and suffix_independent_ids:
+            graph.add_edge(suffix_independent_ids[-1], operation_id, DependencyKind.DATA)
 
     for index, operation_id in enumerate(risky_ids):
         graph.add_edge("choose_b", operation_id, DependencyKind.CONTROL)
@@ -343,8 +433,8 @@ def build_generated_mixed_procurement_workflow(*, dependency_density: str, workf
             for valid_id in valid_ids:
                 graph.add_edge(valid_id, operation_id, DependencyKind.DATA)
 
-    if independent_ids:
-        graph.add_edge(independent_ids[-1], "build_procurement_plan", DependencyKind.DATA)
+    if suffix_independent_ids:
+        graph.add_edge(suffix_independent_ids[-1], "build_procurement_plan", DependencyKind.DATA)
     else:
         graph.add_edge("calculate_tax", "build_procurement_plan", DependencyKind.DATA)
     if valid_ids:
@@ -354,9 +444,10 @@ def build_generated_mixed_procurement_workflow(*, dependency_density: str, workf
 
     order = (
         "check_a_stock",
+        *prefix_independent_ids,
         "reserve_a",
         "calculate_tax",
-        *independent_ids,
+        *suffix_independent_ids,
         "choose_b",
         *valid_ids,
         *risky_ids,
@@ -365,7 +456,7 @@ def build_generated_mixed_procurement_workflow(*, dependency_density: str, workf
         "build_procurement_plan",
     )
     return Workflow(
-        workflow_id=f"procurement-p1-generated-mixed-{dependency_density}-{workflow_size}",
+        workflow_id=f"procurement-p1-generated-mixed-{dependency_density}-{workflow_size}-{failure_position_category}",
         operations=operations,
         order=order,
         dependency_graph=graph,

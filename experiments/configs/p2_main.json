@@ -1,0 +1,16 @@
+{
+  "campaign_id": "p2-main-20260823",
+  "experiment_schema_version": "0.1",
+  "seeds": [1, 2, 3, 4, 5],
+  "strategies": ["blocking", "restart", "checkpoint", "dependency_only", "effectguard"],
+  "workflow_sizes": [10, 25, 50],
+  "dependency_densities": ["sparse", "medium", "dense"],
+  "uncertainty_durations": [100, 500, 1000, 5000],
+  "failure_position_categories": ["early", "middle", "late"],
+  "affected_fraction_targets": [0.1, 0.25, 0.5],
+  "effect_compositions": ["compute_heavy", "mixed"],
+  "fault_types": ["CONTRADICTORY_LATE_RESOLUTION"],
+  "independent_branch_fraction": 0.3,
+  "compensation_failure_config": "none",
+  "analysis_seed": 20260823
+}

@@ -1,0 +1,16 @@
+{
+  "campaign_id": "p2-compfail-20260823",
+  "experiment_schema_version": "0.1",
+  "seeds": [1, 2, 3],
+  "strategies": ["blocking", "restart", "checkpoint", "dependency_only", "effectguard"],
+  "workflow_sizes": [10],
+  "dependency_densities": ["medium"],
+  "uncertainty_durations": [5000],
+  "failure_position_categories": ["middle"],
+  "affected_fraction_targets": [0.25],
+  "effect_compositions": ["mixed"],
+  "fault_types": ["CONTRADICTORY_LATE_RESOLUTION"],
+  "independent_branch_fraction": 0.3,
+  "compensation_failure_config": "moderate",
+  "analysis_seed": 20260823
+}

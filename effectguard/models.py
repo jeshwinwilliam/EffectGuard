@@ -325,6 +325,13 @@ class TrialConfig:
     workflow_variant: str = "auto"
     dependency_density: str = "canonical"
     workflow_size: int = 8
+    affected_fraction_target: float | None = None
+    independent_branch_fraction: float | None = None
+    effect_composition: str = "mixed"
+    failure_position_category: str = "early"
+    compensation_failure_config: str = "none"
+    campaign_id: str | None = None
+    workload_id: str | None = None
 
 
 @dataclass(frozen=True)

@@ -8,6 +8,7 @@ from .artifact_eval import evaluate_artifact
 from .paper_outputs import generate_paper_outputs
 from .experiment import ExperimentRunner, write_results
 from .models import FaultKind, TrialConfig
+from .p2 import analyze_campaign, execute_campaign, write_portfolio_summary
 
 
 def _fault_kind(value: str) -> FaultKind:
@@ -48,6 +49,25 @@ def build_parser() -> argparse.ArgumentParser:
 
     paper_assets = subparsers.add_parser("paper-assets")
     paper_assets.add_argument("--output-dir", type=Path, required=True)
+
+    calibrate = subparsers.add_parser("calibrate")
+    calibrate.add_argument("--config", type=Path, required=True)
+    calibrate.add_argument("--dry-run", action="store_true")
+    calibrate.add_argument("--force", action="store_true")
+    calibrate.add_argument("--output-root", type=Path, default=Path("results"))
+
+    experiment = subparsers.add_parser("experiment")
+    experiment.add_argument("--config", type=Path, required=True)
+    experiment.add_argument("--dry-run", action="store_true")
+    experiment.add_argument("--force", action="store_true")
+    experiment.add_argument("--output-root", type=Path, default=Path("results"))
+
+    analyze = subparsers.add_parser("analyze")
+    analyze.add_argument("--campaign", required=True)
+    analyze.add_argument("--output-root", type=Path, default=Path("results"))
+
+    summarize = subparsers.add_parser("summarize")
+    summarize.add_argument("--output-root", type=Path, default=Path("results"))
 
     return parser
 
@@ -92,6 +112,51 @@ def main(argv: list[str] | None = None) -> int:
             f"paper_assets_status={result['status']} "
             f"output={args.output_dir}"
         )
+        return 0
+
+    if args.command == "calibrate":
+        result = execute_campaign(
+            args.config,
+            dry_run=args.dry_run,
+            force=args.force,
+            output_root=args.output_root,
+        )
+        print(
+            f"campaign={result['campaign_id']} "
+            f"completed={result.get('completed', 0)} "
+            f"skipped={result.get('skipped', 0)} "
+            f"output={args.output_root}"
+        )
+        return 0
+
+    if args.command == "experiment":
+        result = execute_campaign(
+            args.config,
+            dry_run=args.dry_run,
+            force=args.force,
+            output_root=args.output_root,
+        )
+        print(
+            f"campaign={result['campaign_id']} "
+            f"completed={result.get('completed', 0)} "
+            f"skipped={result.get('skipped', 0)} "
+            f"output={args.output_root}"
+        )
+        return 0
+
+    if args.command == "analyze":
+        result = analyze_campaign(args.campaign, output_root=args.output_root)
+        print(
+            f"campaign={result['campaign_id']} "
+            f"runs={result['run_count']} "
+            f"completed={result['completed_count']} "
+            f"output={args.output_root}"
+        )
+        return 0
+
+    if args.command == "summarize":
+        summary_path = write_portfolio_summary(output_root=args.output_root)
+        print(f"summary={summary_path}")
         return 0
 
     metrics = runner.run_trials(

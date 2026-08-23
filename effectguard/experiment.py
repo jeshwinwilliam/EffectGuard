@@ -47,11 +47,16 @@ def create_environment(config: TrialConfig) -> RunEnvironment:
             workflow = build_generated_mixed_procurement_workflow(
                 dependency_density=config.dependency_density,
                 workflow_size=config.workflow_size,
+                affected_fraction_target=config.affected_fraction_target,
+                independent_branch_fraction=config.independent_branch_fraction,
+                failure_position_category=config.failure_position_category,
             )
         else:
             workflow = build_generated_procurement_workflow(
                 dependency_density=config.dependency_density,
                 workflow_size=config.workflow_size,
+                independent_branch_fraction=config.independent_branch_fraction,
+                failure_position_category=config.failure_position_category,
             )
     elif config.workflow_variant == "p1_selective":
         workflow = build_procurement_p1_selective_workflow()

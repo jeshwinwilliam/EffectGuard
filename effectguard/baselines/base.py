@@ -535,9 +535,23 @@ class RunEnvironment:
             "workflow_variant": self.config.workflow_variant,
             "dependency_density": self.config.dependency_density,
             "workflow_size": self.config.workflow_size,
+            "affected_fraction_target": self.config.affected_fraction_target,
+            "independent_branch_fraction": self.config.independent_branch_fraction,
+            "effect_composition": self.config.effect_composition,
+            "failure_position_category": self.config.failure_position_category,
         }
         return len(dumps(payload, sort_keys=True).encode("utf-8"))
 
 
 def build_run_id(config: TrialConfig) -> str:
-    return f"{config.strategy}-seed{config.seed}-u{config.uncertainty_duration_ms}-{config.failure_position}"
+    variant = config.workflow_variant
+    density = config.dependency_density
+    size = config.workflow_size
+    category = config.failure_position_category
+    affected = "na" if config.affected_fraction_target is None else str(config.affected_fraction_target).replace(".", "p")
+    independent = "na" if config.independent_branch_fraction is None else str(config.independent_branch_fraction).replace(".", "p")
+    workload = config.workload_id or "default"
+    return (
+        f"{config.strategy}-seed{config.seed}-u{config.uncertainty_duration_ms}-{config.failure_position}"
+        f"-{category}-{variant}-{density}-n{size}-aff{affected}-ind{independent}-{workload}"
+    )
