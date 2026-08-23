@@ -22,6 +22,25 @@ def execute_recovery_plan(env, plan) -> RecoveryStatus:
     )
     env.selected_invalidated_operations = plan.selected_invalidated_operations
     env.preserved_operations = plan.preserved_operations
+    if plan.unsupported_operations:
+        env.unsupported_irreversible_effects = len(plan.unsupported_operations)
+        env.recovery_status = RecoveryStatus.RECOVERY_UNSUPPORTED
+        env.runtime_log.append(
+            event_type="recovery_unsupported",
+            sim_time_ms=env.clock.peek(),
+            run_id=env.runtime.run_id,
+            seed=env.config.seed,
+            workflow_id=env.workflow.workflow_id,
+            workflow_instance_id=env.config.workflow_instance_id,
+            strategy=env.config.strategy,
+            operation_id=plan.unsupported_operations[0],
+            operation_type="recovery",
+            effect_class="IRREVERSIBLE",
+            attempt=0,
+            observed_status="FAILURE",
+            compensation_indicator=False,
+        )
+        return RecoveryStatus.RECOVERY_UNSUPPORTED
 
     for action in plan.compensation_actions:
         env.runtime_log.append(
@@ -56,6 +75,10 @@ def execute_recovery_plan(env, plan) -> RecoveryStatus:
                 continue
             env.reservations.release(reservation_id=existing.reservation_id)
             result = type("Result", (), {"observed_status": ObservedStatus.SUCCESS})()
+        elif action.action_type is RecoveryActionType.BLOCK_UNSUPPORTED:
+            env.unsupported_irreversible_effects += 1
+            env.recovery_status = RecoveryStatus.RECOVERY_UNSUPPORTED
+            return RecoveryStatus.RECOVERY_UNSUPPORTED
         else:
             result = type("Result", (), {"observed_status": ObservedStatus.FAILURE})()
         if result.observed_status is not ObservedStatus.SUCCESS:
@@ -129,6 +152,23 @@ def execute_recovery_plan(env, plan) -> RecoveryStatus:
                 compensation_indicator=False,
             )
             env.op_build_plan(supplier_id=action.target_supplier_id or "A", recovery=True)
+        elif action.operation_id == "record_audit":
+            env.runtime_log.append(
+                event_type="recomputation_started",
+                sim_time_ms=env.clock.peek(),
+                run_id=env.runtime.run_id,
+                seed=env.config.seed,
+                workflow_id=env.workflow.workflow_id,
+                workflow_instance_id=env.config.workflow_instance_id,
+                strategy=env.config.strategy,
+                operation_id="record_audit",
+                operation_type="recovery",
+                effect_class="PURE",
+                attempt=0,
+                observed_status="PENDING",
+                compensation_indicator=False,
+            )
+            env.op_record_audit(recovery=True)
     env.recovery_status = RecoveryStatus.RECOVERED
     env.runtime_log.append(
         event_type="recovery_completed",

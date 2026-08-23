@@ -95,6 +95,10 @@ class Oracle:
             return ()
         if self.workflow.workflow_id == "procurement-p1" and failure_position == "reserve_a":
             return ("choose_b", "reserve_b", "create_shipment", "build_procurement_plan")
+        if self.workflow.workflow_id == "procurement-p1-selective" and failure_position == "reserve_a":
+            return ("choose_b", "reserve_b", "create_shipment", "build_procurement_plan")
+        if self.workflow.workflow_id == "procurement-p1-irreversible" and failure_position == "reserve_a":
+            return ("choose_b", "reserve_b", "create_shipment", "send_notification", "build_procurement_plan")
         return ()
 
     def evaluate(self, *, final_plan: dict[str, object] | None, failure_position: str, contradiction_detected: bool = False) -> InvariantResult:

@@ -252,6 +252,23 @@ class RunEnvironment:
             **self._metadata_for(ctx.operation_id),
         )
 
+    def op_record_audit(self, *, recovery: bool = False) -> None:
+        started = self.runtime.begin_tracking()
+        ctx = self.runtime.next_context(operation_id="record_audit", sim_time_ms=self.clock.peek(), idempotency_key=None)
+        self.runtime.end_tracking(started)
+        if recovery:
+            self.replayed_operations += 1
+            self.operations_recomputed += 1
+        self.runtime.operation_results["record_audit"] = {"message": "fallback audited", "supplier_id": "B"}
+        self.runtime_log.append(
+            event_type="operation",
+            sim_time_ms=self.clock.peek(),
+            attempt=ctx.attempt,
+            observed_status="SUCCESS",
+            recovery=recovery,
+            **self._metadata_for(ctx.operation_id),
+        )
+
     def op_create_shipment(self, *, supplier_id: str, recovery: bool = False) -> None:
         logical_args = {"supplier_id": supplier_id, "sku": "SKU-1", "quantity": self.required_quantity}
         key = stable_sha256_key(
@@ -273,6 +290,36 @@ class RunEnvironment:
             quantity=self.required_quantity,
         )
         self.runtime.operation_results["create_shipment"] = result.value
+        self.runtime_log.append(
+            event_type="operation",
+            sim_time_ms=self.clock.peek(),
+            attempt=ctx.attempt,
+            observed_status=result.observed_status.value,
+            idempotency_key=key,
+            recovery=recovery,
+            **self._metadata_for(ctx.operation_id),
+        )
+
+    def op_send_notification(self, *, supplier_id: str, recovery: bool = False) -> None:
+        logical_args = {"supplier_id": supplier_id, "template": "fallback-selected"}
+        key = stable_sha256_key(
+            workflow_instance_id=self.config.workflow_instance_id,
+            operation_id="send_notification",
+            logical_args=logical_args,
+        )
+        started = self.runtime.begin_tracking()
+        ctx = self.runtime.next_context(operation_id="send_notification", sim_time_ms=self.clock.peek(), idempotency_key=key)
+        self.runtime.end_tracking(started)
+        if recovery:
+            self.replayed_operations += 1
+            self.operations_recomputed += 1
+        self.track_external_call(identity=f"notification:send:{key}", mutating=True)
+        result = self.notifications.send(
+            idempotency_key=key,
+            recipient=f"{supplier_id.lower()}@example.com",
+            template="fallback-selected",
+        )
+        self.runtime.operation_results["send_notification"] = result.value
         self.runtime_log.append(
             event_type="operation",
             sim_time_ms=self.clock.peek(),

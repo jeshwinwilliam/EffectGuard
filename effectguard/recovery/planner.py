@@ -26,7 +26,7 @@ def build_dependency_only_plan(env) -> RecoveryPlan:
         operation_id for operation_id in env.oracle.unaffected_operations("reserve_a")
         if operation_id in env.runtime.executed_operations
     )
-    compensation_actions = (
+    compensation_actions = [
         RecoveryAction(
             action_type=RecoveryActionType.COMPENSATE,
             operation_id="create_shipment",
@@ -49,20 +49,33 @@ def build_dependency_only_plan(env) -> RecoveryPlan:
                 supplier_id="B",
             ),
         ),
-    )
-    recomputation_actions = (
+    ]
+    if "send_notification" in invalidated:
+        compensation_actions.append(
+            RecoveryAction(
+                action_type=RecoveryActionType.BLOCK_UNSUPPORTED,
+                operation_id="send_notification",
+                target_supplier_id="B",
+                reason="irreversible notification cannot be safely compensated",
+            )
+        )
+    recomputation_actions = [
         RecoveryAction(action_type=RecoveryActionType.REEXECUTE, operation_id="create_shipment", target_supplier_id="A", reason="recreate shipment on A"),
         RecoveryAction(action_type=RecoveryActionType.RECOMPUTE, operation_id="build_procurement_plan", target_supplier_id="A", reason="rebuild final plan"),
-    )
+    ]
+    if "record_audit" in invalidated:
+        recomputation_actions.append(
+            RecoveryAction(action_type=RecoveryActionType.RECOMPUTE, operation_id="record_audit", target_supplier_id="A", reason="conservative descendant replay")
+        )
     env.planner_wall_time_ns += perf_counter_ns() - started
     return RecoveryPlan(
         contradiction_id="contradiction-reserve_a",
         invalidated_operations=invalidated,
         preserved_operations=preserved,
         validation_operations=(),
-        compensation_actions=compensation_actions,
-        recomputation_actions=recomputation_actions,
-        unsupported_operations=(),
+        compensation_actions=tuple(compensation_actions),
+        recomputation_actions=tuple(recomputation_actions),
+        unsupported_operations=("send_notification",) if "send_notification" in invalidated else (),
         selected_invalidated_operations=invalidated,
         reasoning=("graph descendants of reserve_a selected conservatively",),
     )
@@ -71,6 +84,11 @@ def build_dependency_only_plan(env) -> RecoveryPlan:
 def build_effectguard_plan(env) -> RecoveryPlan:
     started = perf_counter_ns()
     invalid_inputs = {"choose_b"}
+    operation_ids = ["choose_b", "reserve_b", "create_shipment", "build_procurement_plan", "calculate_tax"]
+    if "record_audit" in env.workflow.operations:
+        operation_ids.append("record_audit")
+    if "send_notification" in env.workflow.operations:
+        operation_ids.append("send_notification")
     evaluations = [
         evaluate_validity(
             operation_id=operation_id,
@@ -78,7 +96,7 @@ def build_effectguard_plan(env) -> RecoveryPlan:
             runtime_results=env.runtime.operation_results,
             invalid_inputs=invalid_inputs,
         )
-        for operation_id in ("choose_b", "reserve_b", "create_shipment", "build_procurement_plan", "calculate_tax")
+        for operation_id in operation_ids
     ]
     invalidated = tuple(sorted(evaluation.operation_id for evaluation in evaluations if evaluation.result.value == "INVALID"))
     preserved = tuple(
@@ -87,7 +105,8 @@ def build_effectguard_plan(env) -> RecoveryPlan:
             | {evaluation.operation_id for evaluation in evaluations if evaluation.result.value == "VALID"}
         )
     )
-    compensation_actions = (
+    unsupported = tuple(sorted(operation_id for operation_id in invalidated if operation_id == "send_notification"))
+    compensation_actions = [
         RecoveryAction(
             action_type=RecoveryActionType.COMPENSATE,
             operation_id="create_shipment",
@@ -110,20 +129,29 @@ def build_effectguard_plan(env) -> RecoveryPlan:
                 supplier_id="B",
             ),
         ),
-    )
-    recomputation_actions = (
+    ]
+    if unsupported:
+        compensation_actions.append(
+            RecoveryAction(
+                action_type=RecoveryActionType.BLOCK_UNSUPPORTED,
+                operation_id="send_notification",
+                target_supplier_id="B",
+                reason="irreversible notification cannot be safely repaired",
+            )
+        )
+    recomputation_actions = [
         RecoveryAction(action_type=RecoveryActionType.REEXECUTE, operation_id="create_shipment", target_supplier_id="A", reason="create corrected shipment"),
         RecoveryAction(action_type=RecoveryActionType.RECOMPUTE, operation_id="build_procurement_plan", target_supplier_id="A", reason="rebuild corrected plan"),
-    )
+    ]
     env.planner_wall_time_ns += perf_counter_ns() - started
     return RecoveryPlan(
         contradiction_id="contradiction-reserve_a",
         invalidated_operations=invalidated,
         preserved_operations=preserved,
         validation_operations=("reserve_a",),
-        compensation_actions=compensation_actions,
-        recomputation_actions=recomputation_actions,
-        unsupported_operations=(),
+        compensation_actions=tuple(compensation_actions),
+        recomputation_actions=tuple(recomputation_actions),
+        unsupported_operations=unsupported,
         selected_invalidated_operations=invalidated,
         reasoning=tuple(evaluation.reason for evaluation in evaluations),
     )

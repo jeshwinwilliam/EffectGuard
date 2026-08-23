@@ -178,3 +178,101 @@ def build_procurement_p1_workflow() -> Workflow:
         ),
         dependency_graph=graph,
     )
+
+
+def build_procurement_p1_selective_workflow() -> Workflow:
+    workflow = build_procurement_p1_workflow()
+    operations = dict(workflow.operations)
+    operations["record_audit"] = Operation(
+        operation_id="record_audit",
+        name="Record fallback decision audit",
+        effect_class=EffectClass.PURE,
+        service=None,
+        method=None,
+        dependencies=("choose_b",),
+        checkpoint_after=False,
+    )
+    operations["build_procurement_plan"] = Operation(
+        operation_id="build_procurement_plan",
+        name="Build procurement plan",
+        effect_class=EffectClass.PURE,
+        service=None,
+        method=None,
+        dependencies=("create_shipment", "calculate_tax", "record_audit"),
+        checkpoint_after=False,
+    )
+    graph = DependencyGraph()
+    for operation_id in operations:
+        graph.add_node(operation_id)
+    graph.add_edge("check_a_stock", "reserve_a", DependencyKind.DATA)
+    graph.add_edge("reserve_a", "choose_b", DependencyKind.ASSUMPTION)
+    graph.add_edge("choose_b", "record_audit", DependencyKind.CONTROL)
+    graph.add_edge("choose_b", "reserve_b", DependencyKind.CONTROL)
+    graph.add_edge("reserve_b", "create_shipment", DependencyKind.DATA)
+    graph.add_edge("create_shipment", "build_procurement_plan", DependencyKind.DATA)
+    graph.add_edge("calculate_tax", "build_procurement_plan", DependencyKind.DATA)
+    graph.add_edge("record_audit", "build_procurement_plan", DependencyKind.DATA)
+    return Workflow(
+        workflow_id="procurement-p1-selective",
+        operations=operations,
+        order=(
+            "check_a_stock",
+            "reserve_a",
+            "calculate_tax",
+            "choose_b",
+            "record_audit",
+            "reserve_b",
+            "create_shipment",
+            "build_procurement_plan",
+        ),
+        dependency_graph=graph,
+    )
+
+
+def build_procurement_p1_irreversible_workflow() -> Workflow:
+    workflow = build_procurement_p1_workflow()
+    operations = dict(workflow.operations)
+    operations["send_notification"] = Operation(
+        operation_id="send_notification",
+        name="Send irreversible supplier notification",
+        effect_class=EffectClass.IRREVERSIBLE,
+        service="notification",
+        method="send",
+        dependencies=("reserve_b",),
+        checkpoint_after=False,
+    )
+    operations["build_procurement_plan"] = Operation(
+        operation_id="build_procurement_plan",
+        name="Build procurement plan",
+        effect_class=EffectClass.PURE,
+        service=None,
+        method=None,
+        dependencies=("create_shipment", "calculate_tax", "send_notification"),
+        checkpoint_after=False,
+    )
+    graph = DependencyGraph()
+    for operation_id in operations:
+        graph.add_node(operation_id)
+    graph.add_edge("check_a_stock", "reserve_a", DependencyKind.DATA)
+    graph.add_edge("reserve_a", "choose_b", DependencyKind.ASSUMPTION)
+    graph.add_edge("choose_b", "reserve_b", DependencyKind.CONTROL)
+    graph.add_edge("reserve_b", "create_shipment", DependencyKind.DATA)
+    graph.add_edge("reserve_b", "send_notification", DependencyKind.DATA)
+    graph.add_edge("create_shipment", "build_procurement_plan", DependencyKind.DATA)
+    graph.add_edge("send_notification", "build_procurement_plan", DependencyKind.DATA)
+    graph.add_edge("calculate_tax", "build_procurement_plan", DependencyKind.DATA)
+    return Workflow(
+        workflow_id="procurement-p1-irreversible",
+        operations=operations,
+        order=(
+            "check_a_stock",
+            "reserve_a",
+            "calculate_tax",
+            "choose_b",
+            "reserve_b",
+            "create_shipment",
+            "send_notification",
+            "build_procurement_plan",
+        ),
+        dependency_graph=graph,
+    )

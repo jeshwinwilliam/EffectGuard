@@ -20,7 +20,12 @@ from .services.notification import NotificationService
 from .services.payment import PaymentService
 from .services.reservation import ReservationService
 from .services.shipment import ShipmentService
-from .workflow.procurement import build_procurement_p1_workflow, build_procurement_workflow
+from .workflow.procurement import (
+    build_procurement_p1_irreversible_workflow,
+    build_procurement_p1_selective_workflow,
+    build_procurement_p1_workflow,
+    build_procurement_workflow,
+)
 
 
 def create_environment(config: TrialConfig) -> RunEnvironment:
@@ -34,8 +39,16 @@ def create_environment(config: TrialConfig) -> RunEnvironment:
     shipments = ShipmentService()
     payments = PaymentService()
     notifications = NotificationService()
-    use_p1 = config.workflow_variant == "p1" or config.strategy in {"dependency_only", "effectguard"}
-    workflow = build_procurement_p1_workflow() if use_p1 else build_procurement_workflow()
+    if config.workflow_variant == "p1_selective":
+        workflow = build_procurement_p1_selective_workflow()
+    elif config.workflow_variant == "p1_irreversible":
+        workflow = build_procurement_p1_irreversible_workflow()
+    elif config.workflow_variant in {"p1", "p1_compensation_failure"} or config.strategy in {"dependency_only", "effectguard"}:
+        workflow = build_procurement_p1_workflow()
+    else:
+        workflow = build_procurement_workflow()
+    if config.workflow_variant == "p1_compensation_failure":
+        shipments.fail_cancellations = True
     oracle = Oracle(
         inventory=inventory,
         reservations=reservations,

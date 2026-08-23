@@ -12,12 +12,14 @@ def evaluate_validity(
 ) -> ValidityEvaluation:
     if operation_id == "calculate_tax":
         return ValidityEvaluation(operation_id=operation_id, result=ValidityResult.VALID, reason="tax is independent")
+    if operation_id == "record_audit":
+        return ValidityEvaluation(operation_id=operation_id, result=ValidityResult.VALID, reason="audit record remains valid historical evidence")
     if operation_id == "choose_b":
         if resolved_supplier_id == "A":
             return ValidityEvaluation(operation_id=operation_id, result=ValidityResult.INVALID, reason="fallback choice contradicted")
         return ValidityEvaluation(operation_id=operation_id, result=ValidityResult.VALID, reason="fallback choice still valid")
-    if operation_id in {"reserve_b", "create_shipment", "build_procurement_plan"}:
-        if invalid_inputs & {"choose_b", "reserve_b", "create_shipment"}:
+    if operation_id in {"reserve_b", "create_shipment", "send_notification", "build_procurement_plan"}:
+        if invalid_inputs & {"choose_b", "reserve_b", "create_shipment", "send_notification"}:
             return ValidityEvaluation(operation_id=operation_id, result=ValidityResult.INVALID, reason="depends on invalid fallback path")
         value = runtime_results.get(operation_id)
         if isinstance(value, dict):

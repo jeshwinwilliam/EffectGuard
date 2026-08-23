@@ -13,8 +13,12 @@ def run_dependency_only(env: RunEnvironment) -> None:
         env.clock.advance(100)
         env.uncertainty_wait_time += 100
         env.op_choose_b()
+        if "record_audit" in env.workflow.operations:
+            env.op_record_audit()
         env.op_reserve_b()
         env.op_create_shipment(supplier_id="B")
+        if "send_notification" in env.workflow.operations:
+            env.op_send_notification(supplier_id="B")
         env.op_build_plan(supplier_id="B")
         env.clock.advance(max(0, env.config.uncertainty_duration_ms - 100))
         env.uncertainty_wait_time += max(0, env.config.uncertainty_duration_ms - 100)
