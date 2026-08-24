@@ -1,6 +1,6 @@
 {
   "baseline": {
-    "current_commit": "95705221fcb378ef956b60542f38d44fff647cdf",
+    "current_commit": "391a586b99e8504cca712acaf1dbe5b7d0d771a7",
     "p2_main_raw_aggregate_sha256": "67af4f0ec2e357f074709ab94f373b7257a73f6dc15d5217760f454bfcc3efeb",
     "p2_main_raw_file_count": 16200,
     "pytest_expected_passes": 90
@@ -384,7 +384,8 @@
     "P3-G8": "PASS",
     "P3-G9": "PASS"
   },
-  "generated_at": "2026-08-24T04:39:36.699823+00:00",
+  "generated_at": "2026-08-24T04:49:24.914216+00:00",
+  "level_c_status": "IMPLEMENTED_ONLY",
   "level_counts": {
     "p3-level-a-main-20260824": 75,
     "p3-level-a-pilot-20260824": 30,

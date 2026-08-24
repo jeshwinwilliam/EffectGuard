@@ -5,13 +5,14 @@
   "task_suite_version": "p3-level-c-v0",
   "planned_runs": 30,
   "strategies": ["blocking", "restart", "checkpoint", "dependency_only", "effectguard"],
+  "prompt_path": "experiments/p3/prompts/level_c_system.txt",
   "llm_estimate": {
-    "provider": "NOT_CONFIGURED",
-    "model": "NOT_CONFIGURED",
+    "provider": "openai-compatible",
+    "model": "gpt-4.1-mini",
     "estimated_model_calls": 180,
     "estimated_prompt_tokens": 216000,
     "estimated_completion_tokens": 54000,
     "estimated_cost_usd": 0.0,
-    "notes": "Level C infrastructure was intentionally left unexecuted pending explicit approval."
+    "notes": "Level C infrastructure is implemented, but paid or network-backed execution remains intentionally unlaunched pending explicit approval and credentials."
   }
 }

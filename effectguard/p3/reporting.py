@@ -15,6 +15,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from scipy import stats
 
+from .level_c import level_c_dry_run_summary
 from .models import P3LevelAPilotConfig, P3LevelBCampaignConfig
 from .runner import (
     _p3_dirs,
@@ -170,18 +171,10 @@ def instantiate_config(config_payload: dict[str, object]) -> P3LevelAPilotConfig
 def dry_run_p3_config(config_path: Path, *, output_root: Path | None = None) -> dict[str, object]:
     payload = load_p3_config(config_path)
     if str(payload["realism_level"]) == "C":
-        estimate = payload.get("llm_estimate", {})
-        return {
-            "campaign_id": payload["campaign_id"],
-            "realism_level": payload["realism_level"],
-            "planned_runs": int(payload.get("planned_runs", 0)),
-            "estimated_model_calls": int(estimate.get("estimated_model_calls", 0)),
-            "estimated_prompt_tokens": int(estimate.get("estimated_prompt_tokens", 0)),
-            "estimated_completion_tokens": int(estimate.get("estimated_completion_tokens", 0)),
-            "estimated_cost_usd": float(estimate.get("estimated_cost_usd", 0.0)),
-            "result_paths": {name: str(path) for name, path in _p3_dirs(output_root or Path("results"), payload["campaign_id"]).items()},
-            "status": "LEVEL_C_DRY_RUN_ONLY",
-        }
+        result = level_c_dry_run_summary(payload)
+        result["planned_runs"] = int(payload.get("planned_runs", 0))
+        result["result_paths"] = {name: str(path) for name, path in _p3_dirs(output_root or Path("results"), payload["campaign_id"]).items()}
+        return result
     config = instantiate_config(payload)
     tasks = load_task_suite(Path(payload["task_suite_path"]))
     planned_runs = len(tasks) * len(config.environment_seeds) * len(config.policy_seeds) * len(config.strategies)
@@ -506,7 +499,15 @@ def generate_p3_portfolio(*, output_root: Path | None = None, campaign_ids: list
     _write_csv(tables_dir / "TABLE_P3_4_recovery_work.csv", scenario_summary)
     _write_csv(tables_dir / "TABLE_P3_5_stochastic_policy_robustness.csv", policy_seed_summary)
     _write_csv(tables_dir / "TABLE_P3_6_safety_unsupported_cases.csv", [{"scenario_family": row["scenario_family"], "unsupported_rate": row["unsupported_rate"], "validity_unknown_rate": row["validity_unknown_rate"]} for row in _group_summary(all_rows, group_keys=("scenario_family",))])
-    _write_csv(tables_dir / "TABLE_P3_7_level_c_model_results.csv", [{"status": "NOT_EXECUTED", "notes": "Level C was not implemented or executed in this repository state."}])
+    _write_csv(
+        tables_dir / "TABLE_P3_7_level_c_model_results.csv",
+        [
+            {
+                "status": "IMPLEMENTED_ONLY",
+                "notes": "Level C provider/model scaffolding exists, but no paid or network-backed campaign was executed.",
+            }
+        ],
+    )
     _write_csv(tables_dir / "TABLE_P3_8_results_by_difficulty.csv", difficulty_summary)
     _write_csv(tables_dir / "TABLE_P3_9_results_by_semantic_gap.csv", semantic_gap_summary)
     _write_csv(tables_dir / "TABLE_P3_10_results_across_policy_seeds.csv", policy_seed_summary)
@@ -570,6 +571,7 @@ def generate_p3_portfolio(*, output_root: Path | None = None, campaign_ids: list
         "gates": gates,
         "recommendation": recommendation,
         "level_counts": level_counts,
+        "level_c_status": "IMPLEMENTED_ONLY",
     }
     _write_json(processed_dir / "portfolio_report.json", report)
     _write_json(manifests_dir / "manifest.json", {"campaign_ids": campaign_ids, "generated_at": report["generated_at"]})
@@ -585,7 +587,7 @@ def generate_p3_portfolio(*, output_root: Path | None = None, campaign_ids: list
         "",
         "- Level A: dynamic deterministic policy",
         "- Level B: seeded stochastic policy",
-        "- Level C: not implemented or executed in this repository state",
+            "- Level C: infrastructure implemented, execution not performed",
         "",
         "## Domains",
         "",
@@ -651,7 +653,7 @@ def generate_p3_portfolio(*, output_root: Path | None = None, campaign_ids: list
             "",
             "## Level C Results",
             "",
-            "- not implemented or executed",
+            "- implemented only; no real model campaign executed",
             "",
             "## Semantic Selection",
             "",
@@ -690,7 +692,7 @@ def generate_p3_portfolio(*, output_root: Path | None = None, campaign_ids: list
             "",
             "## Negative Results",
             "",
-            "- Level C was not implemented or executed, so model-driven transfer remains untested.",
+            "- Level C was implemented only; model-driven transfer remains untested because no real model campaign was executed.",
             "- Compensation-failure scenarios were not separately benchmarked in the current P3 A/B task suites.",
             "",
             "## Threats To Validity",

@@ -16,6 +16,17 @@ from .reporting import (
     generate_p3_portfolio,
     load_p3_config,
 )
+from .level_c import (
+    AgentModel,
+    AgentModelDecision,
+    CandidateAction,
+    LevelCContext,
+    MockAgentModel,
+    OpenAICompatibleAgentModel,
+    build_level_c_context,
+    level_c_dry_run_summary,
+    select_candidate_action,
+)
 
 __all__ = [
     "P3LevelAPilotConfig",
@@ -29,7 +40,16 @@ __all__ = [
     "execute_level_b_campaign",
     "execute_p3_config",
     "generate_p3_portfolio",
+    "AgentModel",
+    "AgentModelDecision",
+    "CandidateAction",
+    "LevelCContext",
     "load_task_suite",
     "load_p3_config",
+    "MockAgentModel",
+    "OpenAICompatibleAgentModel",
+    "build_level_c_context",
+    "level_c_dry_run_summary",
+    "select_candidate_action",
     "verify_p2_baseline",
 ]

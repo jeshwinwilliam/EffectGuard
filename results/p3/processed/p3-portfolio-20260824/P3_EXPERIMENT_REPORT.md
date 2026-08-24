@@ -8,7 +8,7 @@ P3 evaluates whether EffectGuard's semantic recovery advantage survives dynamic 
 
 - Level A: dynamic deterministic policy
 - Level B: seeded stochastic policy
-- Level C: not implemented or executed in this repository state
+- Level C: infrastructure implemented, execution not performed
 
 ## Domains
 
@@ -70,7 +70,7 @@ P3 evaluates whether EffectGuard's semantic recovery advantage survives dynamic 
 
 ## Level C Results
 
-- not implemented or executed
+- implemented only; no real model campaign executed
 
 ## Semantic Selection
 
@@ -100,7 +100,7 @@ P3 evaluates whether EffectGuard's semantic recovery advantage survives dynamic 
 
 ## Negative Results
 
-- Level C was not implemented or executed, so model-driven transfer remains untested.
+- Level C was implemented only; model-driven transfer remains untested because no real model campaign was executed.
 - Compensation-failure scenarios were not separately benchmarked in the current P3 A/B task suites.
 
 ## Threats To Validity

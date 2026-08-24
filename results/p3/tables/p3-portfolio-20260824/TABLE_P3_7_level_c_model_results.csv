@@ -1,2 +1,2 @@
 status,notes
-NOT_EXECUTED,Level C was not implemented or executed in this repository state.
+IMPLEMENTED_ONLY,"Level C provider/model scaffolding exists, but no paid or network-backed campaign was executed."
