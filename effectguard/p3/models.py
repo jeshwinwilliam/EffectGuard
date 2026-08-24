@@ -182,3 +182,13 @@ class P3LevelAPilotConfig:
     policy_seeds: tuple[int, ...] = (0,)
     strategies: tuple[str, ...] = ("blocking", "restart", "checkpoint", "dependency_only", "effectguard")
     task_suite_version: str = "p3-level-a-v1"
+
+
+@dataclass(frozen=True)
+class P3LevelBCampaignConfig:
+    campaign_id: str
+    realism_level: str = "B"
+    environment_seeds: tuple[int, ...] = (1, 2)
+    policy_seeds: tuple[int, ...] = (0, 1, 2)
+    strategies: tuple[str, ...] = ("blocking", "restart", "checkpoint", "dependency_only", "effectguard")
+    task_suite_version: str = "p3-level-b-v1"

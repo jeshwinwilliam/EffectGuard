@@ -1,0 +1,201 @@
+{
+  "campaign_id": "p3-level-b-pilot-20260824",
+  "effectguard_vs_dependency_only": {
+    "effectguard_win_count": 12,
+    "effectguard_win_rate": 1.0,
+    "paired_run_count": 12,
+    "pairs": [
+      {
+        "dependency_only_precision": 0.3333333333333333,
+        "dependency_only_unnecessary_selected": 2,
+        "effectguard_better": true,
+        "effectguard_precision": 1.0,
+        "effectguard_unnecessary_selected": 0,
+        "environment_seed": 1,
+        "policy_seed": 0,
+        "task_id": "travel_valid_descendant_v1"
+      },
+      {
+        "dependency_only_precision": 0.3333333333333333,
+        "dependency_only_unnecessary_selected": 2,
+        "effectguard_better": true,
+        "effectguard_precision": 1.0,
+        "effectguard_unnecessary_selected": 0,
+        "environment_seed": 1,
+        "policy_seed": 1,
+        "task_id": "travel_valid_descendant_v1"
+      },
+      {
+        "dependency_only_precision": 0.3333333333333333,
+        "dependency_only_unnecessary_selected": 2,
+        "effectguard_better": true,
+        "effectguard_precision": 1.0,
+        "effectguard_unnecessary_selected": 0,
+        "environment_seed": 1,
+        "policy_seed": 2,
+        "task_id": "travel_valid_descendant_v1"
+      },
+      {
+        "dependency_only_precision": 0.3333333333333333,
+        "dependency_only_unnecessary_selected": 2,
+        "effectguard_better": true,
+        "effectguard_precision": 1.0,
+        "effectguard_unnecessary_selected": 0,
+        "environment_seed": 2,
+        "policy_seed": 0,
+        "task_id": "travel_valid_descendant_v1"
+      },
+      {
+        "dependency_only_precision": 0.3333333333333333,
+        "dependency_only_unnecessary_selected": 2,
+        "effectguard_better": true,
+        "effectguard_precision": 1.0,
+        "effectguard_unnecessary_selected": 0,
+        "environment_seed": 2,
+        "policy_seed": 1,
+        "task_id": "travel_valid_descendant_v1"
+      },
+      {
+        "dependency_only_precision": 0.3333333333333333,
+        "dependency_only_unnecessary_selected": 2,
+        "effectguard_better": true,
+        "effectguard_precision": 1.0,
+        "effectguard_unnecessary_selected": 0,
+        "environment_seed": 2,
+        "policy_seed": 2,
+        "task_id": "travel_valid_descendant_v1"
+      },
+      {
+        "dependency_only_precision": 0.3333333333333333,
+        "dependency_only_unnecessary_selected": 2,
+        "effectguard_better": true,
+        "effectguard_precision": 1.0,
+        "effectguard_unnecessary_selected": 0,
+        "environment_seed": 1,
+        "policy_seed": 0,
+        "task_id": "travel_valid_descendant_v2"
+      },
+      {
+        "dependency_only_precision": 0.3333333333333333,
+        "dependency_only_unnecessary_selected": 2,
+        "effectguard_better": true,
+        "effectguard_precision": 1.0,
+        "effectguard_unnecessary_selected": 0,
+        "environment_seed": 1,
+        "policy_seed": 1,
+        "task_id": "travel_valid_descendant_v2"
+      },
+      {
+        "dependency_only_precision": 0.3333333333333333,
+        "dependency_only_unnecessary_selected": 2,
+        "effectguard_better": true,
+        "effectguard_precision": 1.0,
+        "effectguard_unnecessary_selected": 0,
+        "environment_seed": 1,
+        "policy_seed": 2,
+        "task_id": "travel_valid_descendant_v2"
+      },
+      {
+        "dependency_only_precision": 0.3333333333333333,
+        "dependency_only_unnecessary_selected": 2,
+        "effectguard_better": true,
+        "effectguard_precision": 1.0,
+        "effectguard_unnecessary_selected": 0,
+        "environment_seed": 2,
+        "policy_seed": 0,
+        "task_id": "travel_valid_descendant_v2"
+      },
+      {
+        "dependency_only_precision": 0.3333333333333333,
+        "dependency_only_unnecessary_selected": 2,
+        "effectguard_better": true,
+        "effectguard_precision": 1.0,
+        "effectguard_unnecessary_selected": 0,
+        "environment_seed": 2,
+        "policy_seed": 1,
+        "task_id": "travel_valid_descendant_v2"
+      },
+      {
+        "dependency_only_precision": 0.3333333333333333,
+        "dependency_only_unnecessary_selected": 2,
+        "effectguard_better": true,
+        "effectguard_precision": 1.0,
+        "effectguard_unnecessary_selected": 0,
+        "environment_seed": 2,
+        "policy_seed": 2,
+        "task_id": "travel_valid_descendant_v2"
+      }
+    ]
+  },
+  "level_b_status": "EXECUTED",
+  "level_c_status": "NOT_EXECUTED",
+  "policy_seed_summary": [
+    {
+      "mean_semantic_gap": 0.5333333333333333,
+      "mean_trajectory_length": 4.733333333333333,
+      "policy_seed": 0,
+      "run_count": 60
+    },
+    {
+      "mean_semantic_gap": 0.5333333333333333,
+      "mean_trajectory_length": 4.733333333333333,
+      "policy_seed": 1,
+      "run_count": 60
+    },
+    {
+      "mean_semantic_gap": 0.5333333333333333,
+      "mean_trajectory_length": 4.733333333333333,
+      "policy_seed": 2,
+      "run_count": 60
+    }
+  ],
+  "realism_level": "B",
+  "run_count": 180,
+  "strategy_summary": [
+    {
+      "correctness_rate": 1.0,
+      "mean_precision": null,
+      "mean_recall": null,
+      "mean_recovery_work": 0.0,
+      "mean_unnecessary_selected": 0.0,
+      "run_count": 36,
+      "strategy": "blocking"
+    },
+    {
+      "correctness_rate": 1.0,
+      "mean_precision": 0.666666666666667,
+      "mean_recall": 1.0,
+      "mean_recovery_work": 3.6666666666666665,
+      "mean_unnecessary_selected": 0.6666666666666666,
+      "run_count": 36,
+      "strategy": "checkpoint"
+    },
+    {
+      "correctness_rate": 1.0,
+      "mean_precision": 0.666666666666667,
+      "mean_recall": 1.0,
+      "mean_recovery_work": 5.333333333333333,
+      "mean_unnecessary_selected": 0.6666666666666666,
+      "run_count": 36,
+      "strategy": "dependency_only"
+    },
+    {
+      "correctness_rate": 1.0,
+      "mean_precision": 1.0,
+      "mean_recall": 1.0,
+      "mean_recovery_work": 2.3333333333333335,
+      "mean_unnecessary_selected": 0.0,
+      "run_count": 36,
+      "strategy": "effectguard"
+    },
+    {
+      "correctness_rate": 1.0,
+      "mean_precision": 0.2833333333333335,
+      "mean_recall": 1.0,
+      "mean_recovery_work": 7.0,
+      "mean_unnecessary_selected": 2.6666666666666665,
+      "run_count": 36,
+      "strategy": "restart"
+    }
+  ]
+}

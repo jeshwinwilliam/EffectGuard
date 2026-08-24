@@ -1,0 +1,448 @@
+{
+  "actions": [
+    {
+      "action_id": "travel_valid_descendant_v2-step01-search_flights_task",
+      "action_type": "tool_call",
+      "arguments": {},
+      "assumption_dependencies": [],
+      "external_effect_class": "READ",
+      "logical_operation_id": "search_flights_task",
+      "observation_dependencies": [
+        "travel_valid_descendant_v2-obs-goal"
+      ],
+      "produced_observation_id": "travel_valid_descendant_v2-obs-01-flights",
+      "step_index": 1,
+      "timestamp_ms": 0,
+      "tool_name": "search_flights"
+    },
+    {
+      "action_id": "travel_valid_descendant_v2-step02-reserve_flight_A",
+      "action_type": "tool_call",
+      "arguments": {
+        "flight_id": "flight_A"
+      },
+      "assumption_dependencies": [],
+      "external_effect_class": "COMPENSABLE",
+      "logical_operation_id": "reserve_flight_A",
+      "observation_dependencies": [
+        "travel_valid_descendant_v2-obs-01-flights"
+      ],
+      "produced_observation_id": "travel_valid_descendant_v2-obs-02-flight_a",
+      "step_index": 2,
+      "timestamp_ms": 100,
+      "tool_name": "reserve_flight"
+    },
+    {
+      "action_id": "travel_valid_descendant_v2-step03-calculate_trip_cost_task",
+      "action_type": "tool_call",
+      "arguments": {},
+      "assumption_dependencies": [],
+      "external_effect_class": "PURE",
+      "logical_operation_id": "calculate_trip_cost_task",
+      "observation_dependencies": [
+        "travel_valid_descendant_v2-obs-01-flights"
+      ],
+      "produced_observation_id": "travel_valid_descendant_v2-obs-03-trip_cost",
+      "step_index": 3,
+      "timestamp_ms": 200,
+      "tool_name": "calculate_trip_cost"
+    },
+    {
+      "action_id": "travel_valid_descendant_v2-step04-search_hotel_task",
+      "action_type": "tool_call",
+      "arguments": {},
+      "assumption_dependencies": [],
+      "external_effect_class": "READ",
+      "logical_operation_id": "search_hotel_task",
+      "observation_dependencies": [
+        "travel_valid_descendant_v2-obs-01-flights",
+        "travel_valid_descendant_v2-obs-02-flight_a",
+        "travel_valid_descendant_v2-obs-03-trip_cost",
+        "travel_valid_descendant_v2-obs-goal"
+      ],
+      "produced_observation_id": "travel_valid_descendant_v2-obs-04-hotels",
+      "step_index": 4,
+      "timestamp_ms": 300,
+      "tool_name": "search_hotel"
+    },
+    {
+      "action_id": "travel_valid_descendant_v2-step05-reserve_flight_B",
+      "action_type": "tool_call",
+      "arguments": {
+        "flight_id": "flight_B"
+      },
+      "assumption_dependencies": [
+        "assumption-flight_A"
+      ],
+      "external_effect_class": "COMPENSABLE",
+      "logical_operation_id": "reserve_flight_B",
+      "observation_dependencies": [
+        "travel_valid_descendant_v2-obs-01-flights"
+      ],
+      "produced_observation_id": "travel_valid_descendant_v2-obs-05-flight_b",
+      "step_index": 5,
+      "timestamp_ms": 400,
+      "tool_name": "reserve_flight"
+    },
+    {
+      "action_id": "travel_valid_descendant_v2-step06-reserve_hotel_hotel_Seattle",
+      "action_type": "tool_call",
+      "arguments": {
+        "hotel_id": "hotel_Seattle"
+      },
+      "assumption_dependencies": [
+        "assumption-flight_A"
+      ],
+      "external_effect_class": "COMPENSABLE",
+      "logical_operation_id": "reserve_hotel_hotel_Seattle",
+      "observation_dependencies": [
+        "travel_valid_descendant_v2-obs-01-flights",
+        "travel_valid_descendant_v2-obs-02-flight_a",
+        "travel_valid_descendant_v2-obs-03-trip_cost",
+        "travel_valid_descendant_v2-obs-04-hotels",
+        "travel_valid_descendant_v2-obs-05-flight_b",
+        "travel_valid_descendant_v2-obs-goal"
+      ],
+      "produced_observation_id": "travel_valid_descendant_v2-obs-06-hotel",
+      "step_index": 6,
+      "timestamp_ms": 500,
+      "tool_name": "reserve_hotel"
+    }
+  ],
+  "assumptions": [
+    {
+      "assumed_state": "FAILURE",
+      "assumption_id": "assumption-flight_A",
+      "source_action_id": "travel_valid_descendant_v2-step02-reserve_flight_A",
+      "virtual_time_ms": 100
+    }
+  ],
+  "domain": "travel",
+  "environment_seed": 2,
+  "fault": "CONTRADICTORY_LATE_RESOLUTION",
+  "final_state": {
+    "final_state_correct": true,
+    "messages": [],
+    "oracle_invalid_actions": [
+      "travel_valid_descendant_v2-step05-reserve_flight_B"
+    ],
+    "selected_invalid_actions": [
+      "travel_valid_descendant_v2-step04-search_hotel_task",
+      "travel_valid_descendant_v2-step05-reserve_flight_B",
+      "travel_valid_descendant_v2-step06-reserve_hotel_hotel_Seattle"
+    ],
+    "state": {
+      "active_flight_a": "flight-booking-flight_A-1",
+      "active_flight_b": "flight-booking-flight_B-1",
+      "active_hotel": "hotel-booking-hotel_Seattle-1",
+      "constraints": {
+        "arrival_before_hour": 18,
+        "destination": "Seattle"
+      },
+      "environment_seed": 2,
+      "flight_a_attempted": true,
+      "flight_a_status": "SUCCESS",
+      "flight_a_visible": true,
+      "flight_b_attempted": true,
+      "flight_b_status": "SUCCESS",
+      "flight_b_visible": true,
+      "flight_bookings": {
+        "flight-booking-flight_A-1": {
+          "arrival_hour": 17,
+          "booking_id": "flight-booking-flight_A-1",
+          "flight_id": "flight_A",
+          "status": "ACTIVE"
+        },
+        "flight-booking-flight_B-1": {
+          "arrival_hour": 17,
+          "booking_id": "flight-booking-flight_B-1",
+          "flight_id": "flight_B",
+          "status": "CANCELED"
+        }
+      },
+      "flight_options": {
+        "flight_A": {
+          "arrival_hour": 17,
+          "destination": "Seattle",
+          "price_minor": 50000
+        },
+        "flight_B": {
+          "arrival_hour": 17,
+          "destination": "Seattle",
+          "price_minor": 52000
+        }
+      },
+      "flights_searched": true,
+      "hidden_commits": {},
+      "hotel_attempted": true,
+      "hotel_bookings": {
+        "hotel-booking-hotel_Seattle-1": {
+          "booking_id": "hotel-booking-hotel_Seattle-1",
+          "hotel_id": "hotel_Seattle",
+          "status": "CANCELED"
+        },
+        "recovered-hotel-2": {
+          "booking_id": "recovered-hotel-2",
+          "hotel_id": "hotel_Seattle",
+          "status": "ACTIVE"
+        }
+      },
+      "hotel_options": {
+        "hotel_Seattle": {
+          "destination": "Seattle",
+          "price_minor": 28000
+        },
+        "hotel_Seattle_backup": {
+          "destination": "Seattle",
+          "price_minor": 30000
+        }
+      },
+      "hotel_visible": true,
+      "hotels_searched": true,
+      "trip_cost_calculated": true
+    }
+  },
+  "late_resolutions": [
+    {
+      "action_id": "reserve_flight_A",
+      "due_time_ms": 5100,
+      "note": "simulated contradictory late resolution with extra hotel choice",
+      "resolved_status": "SUCCESS",
+      "tool_name": "reserve_flight"
+    }
+  ],
+  "observations": [
+    {
+      "assumption_id": null,
+      "observation_id": "travel_valid_descendant_v2-obs-goal",
+      "provenance": [],
+      "source": "task_goal",
+      "value": {
+        "constraints": [
+          "destination = Seattle",
+          "arrival before 18:00",
+          "total budget <= 950",
+          "no duplicate active flight bookings",
+          "hotel dates match trip dates"
+        ],
+        "goal": "Book a Seattle trip while preserving exactly one final flight and one final hotel."
+      },
+      "virtual_time_ms": 0
+    },
+    {
+      "assumption_id": null,
+      "observation_id": "travel_valid_descendant_v2-obs-01-flights",
+      "provenance": [
+        "travel_valid_descendant_v2-step01-search_flights_task"
+      ],
+      "source": "search_flights",
+      "value": {
+        "options": {
+          "flight_A": {
+            "arrival_hour": 17,
+            "destination": "Seattle",
+            "price_minor": 50000
+          },
+          "flight_B": {
+            "arrival_hour": 17,
+            "destination": "Seattle",
+            "price_minor": 52000
+          }
+        }
+      },
+      "virtual_time_ms": 0
+    },
+    {
+      "assumption_id": null,
+      "observation_id": "travel_valid_descendant_v2-obs-02-flight_a",
+      "provenance": [
+        "travel_valid_descendant_v2-step02-reserve_flight_A"
+      ],
+      "source": "reserve_flight",
+      "value": {
+        "booking_id": "flight-booking-flight_A-1",
+        "flight_id": "flight_A",
+        "status": "UNKNOWN"
+      },
+      "virtual_time_ms": 100
+    },
+    {
+      "assumption_id": null,
+      "observation_id": "travel_valid_descendant_v2-obs-03-trip_cost",
+      "provenance": [
+        "travel_valid_descendant_v2-step03-calculate_trip_cost_task"
+      ],
+      "source": "calculate_trip_cost",
+      "value": {
+        "total_minor": 82500
+      },
+      "virtual_time_ms": 200
+    },
+    {
+      "assumption_id": null,
+      "observation_id": "travel_valid_descendant_v2-obs-04-hotels",
+      "provenance": [
+        "travel_valid_descendant_v2-step04-search_hotel_task"
+      ],
+      "source": "search_hotel",
+      "value": {
+        "options": {
+          "hotel_Seattle": {
+            "destination": "Seattle",
+            "price_minor": 28000
+          },
+          "hotel_Seattle_backup": {
+            "destination": "Seattle",
+            "price_minor": 30000
+          }
+        }
+      },
+      "virtual_time_ms": 300
+    },
+    {
+      "assumption_id": "assumption-flight_A",
+      "observation_id": "travel_valid_descendant_v2-obs-05-flight_b",
+      "provenance": [
+        "travel_valid_descendant_v2-step05-reserve_flight_B"
+      ],
+      "source": "reserve_flight",
+      "value": {
+        "booking_id": "flight-booking-flight_B-1",
+        "flight_id": "flight_B",
+        "status": "SUCCESS"
+      },
+      "virtual_time_ms": 400
+    },
+    {
+      "assumption_id": "assumption-flight_A",
+      "observation_id": "travel_valid_descendant_v2-obs-06-hotel",
+      "provenance": [
+        "travel_valid_descendant_v2-step06-reserve_hotel_hotel_Seattle"
+      ],
+      "source": "reserve_hotel",
+      "value": {
+        "booking_id": "hotel-booking-hotel_Seattle-1",
+        "hotel_id": "hotel_Seattle",
+        "status": "SUCCESS"
+      },
+      "virtual_time_ms": 500
+    },
+    {
+      "assumption_id": null,
+      "observation_id": "travel_valid_descendant_v2-resolution-reserve_flight_A",
+      "provenance": [
+        "reserve_flight_A"
+      ],
+      "source": "late_resolution",
+      "value": {
+        "booking_id": "flight-booking-flight_A-1",
+        "flight_id": "flight_A",
+        "status": "SUCCESS"
+      },
+      "virtual_time_ms": 5600
+    }
+  ],
+  "policy_seed": 1,
+  "realism_level": "B",
+  "recovery_actions": [
+    {
+      "action": "dependency_only_select",
+      "selected": [
+        "travel_valid_descendant_v2-step04-search_hotel_task",
+        "travel_valid_descendant_v2-step05-reserve_flight_B",
+        "travel_valid_descendant_v2-step06-reserve_hotel_hotel_Seattle"
+      ],
+      "strategy": "dependency_only"
+    }
+  ],
+  "strategy": "dependency_only",
+  "task_id": "travel_valid_descendant_v2",
+  "tool_results": [
+    {
+      "action_id": "travel_valid_descendant_v2-step01-search_flights_task",
+      "actual_status": "SUCCESS",
+      "note": "flight options read",
+      "observed_status": "SUCCESS",
+      "tool_name": "search_flights",
+      "value": {
+        "options": {
+          "flight_A": {
+            "arrival_hour": 17,
+            "destination": "Seattle",
+            "price_minor": 50000
+          },
+          "flight_B": {
+            "arrival_hour": 17,
+            "destination": "Seattle",
+            "price_minor": 52000
+          }
+        }
+      }
+    },
+    {
+      "action_id": "travel_valid_descendant_v2-step02-reserve_flight_A",
+      "actual_status": "SUCCESS",
+      "note": "simulated contradictory late resolution with extra hotel choice",
+      "observed_status": "UNKNOWN",
+      "tool_name": "reserve_flight",
+      "value": {
+        "booking_id": "flight-booking-flight_A-1",
+        "flight_id": "flight_A",
+        "status": "UNKNOWN"
+      }
+    },
+    {
+      "action_id": "travel_valid_descendant_v2-step03-calculate_trip_cost_task",
+      "actual_status": "SUCCESS",
+      "note": "trip cost calculated",
+      "observed_status": "SUCCESS",
+      "tool_name": "calculate_trip_cost",
+      "value": {
+        "total_minor": 82500
+      }
+    },
+    {
+      "action_id": "travel_valid_descendant_v2-step04-search_hotel_task",
+      "actual_status": "SUCCESS",
+      "note": "hotel options read",
+      "observed_status": "SUCCESS",
+      "tool_name": "search_hotel",
+      "value": {
+        "options": {
+          "hotel_Seattle": {
+            "destination": "Seattle",
+            "price_minor": 28000
+          },
+          "hotel_Seattle_backup": {
+            "destination": "Seattle",
+            "price_minor": 30000
+          }
+        }
+      }
+    },
+    {
+      "action_id": "travel_valid_descendant_v2-step05-reserve_flight_B",
+      "actual_status": "SUCCESS",
+      "note": "flight booked",
+      "observed_status": "SUCCESS",
+      "tool_name": "reserve_flight",
+      "value": {
+        "booking_id": "flight-booking-flight_B-1",
+        "flight_id": "flight_B",
+        "status": "SUCCESS"
+      }
+    },
+    {
+      "action_id": "travel_valid_descendant_v2-step06-reserve_hotel_hotel_Seattle",
+      "actual_status": "SUCCESS",
+      "note": "hotel booked",
+      "observed_status": "SUCCESS",
+      "tool_name": "reserve_hotel",
+      "value": {
+        "booking_id": "hotel-booking-hotel_Seattle-1",
+        "hotel_id": "hotel_Seattle",
+        "status": "SUCCESS"
+      }
+    }
+  ]
+}

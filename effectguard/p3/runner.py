@@ -19,6 +19,7 @@ from .models import (
     DecisionReevaluation,
     GoalConstraints,
     ObservationRecord,
+    P3LevelBCampaignConfig,
     P3LevelAPilotConfig,
     P3RunMetrics,
     P3Trace,
@@ -28,6 +29,7 @@ from .models import (
 
 
 TASK_SUITE_PATH = Path("experiments/p3/tasks/level_a_tasks_v1.json")
+TASK_SUITE_PATH_LEVEL_B = Path("experiments/p3/tasks/level_b_tasks_v1.json")
 
 
 def _git_commit() -> str:
@@ -72,7 +74,8 @@ def verify_p2_baseline() -> dict[str, object]:
 
 
 def load_task_suite(task_suite_path: Path | None = None) -> list[TaskSpec]:
-    payload = json.loads((task_suite_path or TASK_SUITE_PATH).read_text(encoding="utf-8"))
+    selected_path = task_suite_path or TASK_SUITE_PATH
+    payload = json.loads(selected_path.read_text(encoding="utf-8"))
     tasks: list[TaskSpec] = []
     for item in payload["tasks"]:
         tasks.append(
@@ -97,6 +100,14 @@ def load_task_suite(task_suite_path: Path | None = None) -> list[TaskSpec]:
             )
         )
     return tasks
+
+
+def _task_suite_path_for_realism_level(realism_level: str) -> Path:
+    if realism_level == "A":
+        return TASK_SUITE_PATH
+    if realism_level == "B":
+        return TASK_SUITE_PATH_LEVEL_B
+    raise ValueError(f"unsupported realism level {realism_level}")
 
 
 def _domain_constraints_from_state(task: TaskSpec, state: dict[str, object]) -> None:
@@ -166,7 +177,19 @@ def _latest_observation_ids(observation_lookup: dict[str, ObservationRecord], *,
     return tuple(sorted(observation_id for observation_id in observation_lookup if observation_id.startswith(prefix)))
 
 
-def _deterministic_policy_next_action(
+def _rotate_candidates(
+    candidates: list[tuple[str, dict[str, object], tuple[str, ...], tuple[str, ...]]],
+    *,
+    policy_seed: int,
+    step_index: int,
+) -> list[tuple[str, dict[str, object], tuple[str, ...], tuple[str, ...]]]:
+    if not candidates:
+        return candidates
+    shift = (policy_seed + step_index) % len(candidates)
+    return candidates[shift:] + candidates[:shift]
+
+
+def _level_a_policy_next_action(
     *,
     task: TaskSpec,
     state: dict[str, object],
@@ -238,6 +261,133 @@ def _deterministic_policy_next_action(
                 return "submit_job", {"cluster_id": "cluster_A", "allocation_id": state["active_allocation_a"]}, ("allocation_a",), ()
         return None
     raise ValueError(f"unsupported task domain {task.domain}")
+
+
+def _level_b_policy_next_action(
+    *,
+    task: TaskSpec,
+    state: dict[str, object],
+    observation_lookup: dict[str, ObservationRecord],
+    strategy: str,
+    policy_seed: int,
+    step_index: int,
+) -> tuple[str, dict[str, object], tuple[str, ...], tuple[str, ...]] | None:
+    if task.domain == "procurement":
+        if "supplier_a_checked" not in state:
+            return "check_supplier", {"supplier_id": "A"}, ("goal",), ()
+        if "reservation_a_visible" not in state and "reservation_a_attempted" not in state:
+            return "reserve_inventory", {"supplier_id": "A"}, ("supplier_a",), ()
+        if state.get("reservation_a_status") == "UNKNOWN":
+            if strategy == "blocking":
+                return None
+            candidates: list[tuple[str, dict[str, object], tuple[str, ...], tuple[str, ...]]] = []
+            if "tax_calculated" not in state:
+                candidates.append(("calculate_tax", {}, ("supplier_a",), ()))
+            if "reservation_b_visible" not in state and "reservation_b_attempted" not in state:
+                if "assumption_reserve_a_failure" not in state:
+                    state["assumption_reserve_a_failure"] = True
+                candidates.append(("reserve_inventory", {"supplier_id": "B"}, ("supplier_a", "goal"), ("assumption-reserve_a",)))
+            rotated = _rotate_candidates(candidates, policy_seed=policy_seed, step_index=step_index)
+            if rotated:
+                return rotated[0]
+        shipment_candidates: list[tuple[str, dict[str, object], tuple[str, ...], tuple[str, ...]]] = []
+        if "reservation_b_visible" in state and "shipment_b_visible" not in state:
+            shipment_candidates.append(
+                ("create_shipment", {"reservation_id": state["active_reservation_b"], "supplier_id": "B"}, ("reservation_b",), ("assumption-reserve_a",))
+            )
+        if "reservation_a_visible" in state and "shipment_a_visible" not in state and "reservation_b_visible" not in state:
+            shipment_candidates.append(
+                ("create_shipment", {"reservation_id": state["active_reservation_a"], "supplier_id": "A"}, ("reservation_a",), ())
+            )
+        rotated = _rotate_candidates(shipment_candidates, policy_seed=policy_seed, step_index=step_index)
+        return rotated[0] if rotated else None
+    if task.domain == "travel":
+        if "flights_searched" not in state:
+            return "search_flights", {}, ("goal",), ()
+        if "flight_a_attempted" not in state:
+            return "reserve_flight", {"flight_id": "flight_A"}, ("flights",), ()
+        if state.get("flight_a_status") == "UNKNOWN":
+            if strategy == "blocking":
+                return None
+            candidates: list[tuple[str, dict[str, object], tuple[str, ...], tuple[str, ...]]] = []
+            if "trip_cost_calculated" not in state:
+                candidates.append(("calculate_trip_cost", {}, ("flights",), ()))
+            if "hotels_searched" not in state:
+                candidates.append(("search_hotel", {}, ("goal",), ()))
+            if "flight_b_attempted" not in state:
+                candidates.append(("reserve_flight", {"flight_id": "flight_B"}, ("flights",), ("assumption-flight_A",)))
+            if "hotels_searched" in state and "hotel_attempted" not in state and "flight_b_attempted" in state:
+                candidates.append(("reserve_hotel", {"hotel_id": "hotel_Seattle"}, ("hotels", "goal"), ("assumption-flight_A",)))
+            rotated = _rotate_candidates(candidates, policy_seed=policy_seed, step_index=step_index)
+            if rotated:
+                return rotated[0]
+        if "hotels_searched" not in state:
+            return "search_hotel", {}, ("goal",), ()
+        if "hotel_attempted" not in state:
+            assumption_dependencies = ("assumption-flight_A",) if "flight_b_attempted" in state and "flight_a_visible" not in state else ()
+            return "reserve_hotel", {"hotel_id": "hotel_Seattle"}, ("hotels", "goal"), assumption_dependencies
+        return None
+    if task.domain == "cloud":
+        if "capacity_a_attempted" not in state:
+            return "check_capacity", {"cluster_id": "cluster_A"}, ("goal",), ()
+        if state.get("capacity_a_status") == "UNKNOWN":
+            if strategy == "blocking":
+                return None
+            candidates: list[tuple[str, dict[str, object], tuple[str, ...], tuple[str, ...]]] = []
+            if "resource_plan_calculated" not in state:
+                candidates.append(("calculate_resource_plan", {}, ("goal",), ()))
+            if "allocation_b_attempted" not in state:
+                candidates.append(("allocate_worker", {"cluster_id": "cluster_B"}, ("goal",), ("assumption-cluster_A",)))
+            if "allocation_b_attempted" in state and "job_b_attempted" not in state:
+                candidates.append(
+                    ("submit_job", {"cluster_id": "cluster_B", "allocation_id": state["active_allocation_b"]}, ("allocation_b",), ("assumption-cluster_A",))
+                )
+            rotated = _rotate_candidates(candidates, policy_seed=policy_seed, step_index=step_index)
+            if rotated:
+                return rotated[0]
+        if state.get("capacity_a_status") == "FAILURE" or state.get("capacity_a_resolved_failure"):
+            if "resource_plan_calculated" not in state:
+                return "calculate_resource_plan", {}, ("goal",), ()
+            if "allocation_b_attempted" not in state:
+                return "allocate_worker", {"cluster_id": "cluster_B"}, ("goal",), ()
+            if "job_b_attempted" not in state:
+                return "submit_job", {"cluster_id": "cluster_B", "allocation_id": state["active_allocation_b"]}, ("allocation_b",), ()
+        if state.get("capacity_a_status") == "SUCCESS":
+            if "allocation_a_attempted" not in state:
+                return "allocate_worker", {"cluster_id": "cluster_A"}, ("capacity_a",), ()
+            if "job_a_attempted" not in state:
+                return "submit_job", {"cluster_id": "cluster_A", "allocation_id": state["active_allocation_a"]}, ("allocation_a",), ()
+        return None
+    raise ValueError(f"unsupported task domain {task.domain}")
+
+
+def _policy_next_action(
+    *,
+    task: TaskSpec,
+    state: dict[str, object],
+    observation_lookup: dict[str, ObservationRecord],
+    strategy: str,
+    realism_level: str,
+    policy_seed: int,
+    step_index: int,
+) -> tuple[str, dict[str, object], tuple[str, ...], tuple[str, ...]] | None:
+    if realism_level == "A":
+        return _level_a_policy_next_action(
+            task=task,
+            state=state,
+            observation_lookup=observation_lookup,
+            strategy=strategy,
+        )
+    if realism_level == "B":
+        return _level_b_policy_next_action(
+            task=task,
+            state=state,
+            observation_lookup=observation_lookup,
+            strategy=strategy,
+            policy_seed=policy_seed,
+            step_index=step_index,
+        )
+    raise ValueError(f"unsupported realism level {realism_level}")
 
 
 def _apply_visible_state_updates(task: TaskSpec, state: dict[str, object], tool_name: str, execution_value: dict[str, object], observed_status: ObservedStatus) -> tuple[str, dict[str, object]]:
@@ -609,6 +759,7 @@ def _run_single_task(
     campaign_id: str,
     task: TaskSpec,
     domain: ToolDomain,
+    realism_level: str,
     strategy: str,
     environment_seed: int,
     policy_seed: int,
@@ -619,7 +770,7 @@ def _run_single_task(
     observation_lookup: dict[str, ObservationRecord] = {}
     trace = P3Trace(
         task_id=task.task_id,
-        realism_level="A",
+        realism_level=realism_level,
         domain=task.domain,
         strategy=strategy,
         environment_seed=environment_seed,
@@ -641,11 +792,14 @@ def _run_single_task(
     contradicted_assumption_id: str | None = None
 
     while True:
-        next_action = _deterministic_policy_next_action(
+        next_action = _policy_next_action(
             task=task,
             state=state,
             observation_lookup=observation_lookup,
             strategy=strategy,
+            realism_level=realism_level,
+            policy_seed=policy_seed,
+            step_index=step_index,
         )
         if next_action is None:
             if pending_resolutions:
@@ -832,7 +986,7 @@ def _run_single_task(
     }
     run_id = _run_id(
         campaign_id=campaign_id,
-        realism_level="A",
+        realism_level=realism_level,
         task=task,
         environment_seed=environment_seed,
         policy_seed=policy_seed,
@@ -842,7 +996,7 @@ def _run_single_task(
         P3RunMetrics(
             run_id=run_id,
             phase="P3",
-            realism_level="A",
+            realism_level=realism_level,
             domain=task.domain,
             task_id=task.task_id,
             strategy=strategy,
@@ -891,12 +1045,17 @@ def _run_single_task(
     )
 
 
-def execute_level_a_campaign(config: P3LevelAPilotConfig, *, output_root: Path | None = None) -> dict[str, object]:
+def _execute_campaign(
+    config: P3LevelAPilotConfig | P3LevelBCampaignConfig,
+    *,
+    output_root: Path | None = None,
+    policy_version: str,
+) -> dict[str, object]:
     root = output_root or Path("results")
     dirs = _p3_dirs(root, config.campaign_id)
     for directory in dirs.values():
         directory.mkdir(parents=True, exist_ok=True)
-    tasks = load_task_suite()
+    tasks = load_task_suite(_task_suite_path_for_realism_level(config.realism_level))
     domains = domain_registry()
     manifest = {
         "campaign_id": config.campaign_id,
@@ -905,7 +1064,7 @@ def execute_level_a_campaign(config: P3LevelAPilotConfig, *, output_root: Path |
         "phase": "P3",
         "realism_level": config.realism_level,
         "task_suite_version": config.task_suite_version,
-        "policy_version": "level_a_deterministic_policy_v1",
+        "policy_version": policy_version,
         "tool_contract_version": "p3_tool_contracts_v1",
         "environment_seeds": list(config.environment_seeds),
         "policy_seeds": list(config.policy_seeds),
@@ -923,6 +1082,7 @@ def execute_level_a_campaign(config: P3LevelAPilotConfig, *, output_root: Path |
                         campaign_id=config.campaign_id,
                         task=task,
                         domain=domains[task.domain],
+                        realism_level=config.realism_level,
                         strategy=strategy,
                         environment_seed=environment_seed,
                         policy_seed=policy_seed,
@@ -937,10 +1097,62 @@ def execute_level_a_campaign(config: P3LevelAPilotConfig, *, output_root: Path |
     }
 
 
-def analyze_level_a_campaign(campaign_id: str, *, output_root: Path | None = None) -> dict[str, object]:
+def execute_level_a_campaign(config: P3LevelAPilotConfig, *, output_root: Path | None = None) -> dict[str, object]:
+    return _execute_campaign(config, output_root=output_root, policy_version="level_a_deterministic_policy_v1")
+
+
+def execute_level_b_campaign(config: P3LevelBCampaignConfig, *, output_root: Path | None = None) -> dict[str, object]:
+    return _execute_campaign(config, output_root=output_root, policy_version="level_b_seeded_policy_v1")
+
+
+def _paired_strategy_advantage(rows: list[dict[str, object]]) -> dict[str, object]:
+    effectguard_rows = {
+        (row["task_id"], row["environment_seed"], row["policy_seed"]): row
+        for row in rows
+        if row["strategy"] == "effectguard" and row["semantic_gap"] > 0
+    }
+    dependency_rows = {
+        (row["task_id"], row["environment_seed"], row["policy_seed"]): row
+        for row in rows
+        if row["strategy"] == "dependency_only" and row["semantic_gap"] > 0
+    }
+    shared_keys = sorted(set(effectguard_rows) & set(dependency_rows))
+    paired = []
+    effectguard_win_count = 0
+    for key in shared_keys:
+        effectguard = effectguard_rows[key]
+        dependency = dependency_rows[key]
+        effectguard_better = (
+            (effectguard["recovery_selection_precision"] or 0.0) > (dependency["recovery_selection_precision"] or 0.0)
+            or effectguard["unnecessary_selected_operations"] < dependency["unnecessary_selected_operations"]
+        )
+        if effectguard_better:
+            effectguard_win_count += 1
+        paired.append(
+            {
+                "task_id": key[0],
+                "environment_seed": key[1],
+                "policy_seed": key[2],
+                "effectguard_precision": effectguard["recovery_selection_precision"],
+                "dependency_only_precision": dependency["recovery_selection_precision"],
+                "effectguard_unnecessary_selected": effectguard["unnecessary_selected_operations"],
+                "dependency_only_unnecessary_selected": dependency["unnecessary_selected_operations"],
+                "effectguard_better": effectguard_better,
+            }
+        )
+    return {
+        "paired_run_count": len(shared_keys),
+        "effectguard_win_count": effectguard_win_count,
+        "effectguard_win_rate": None if not shared_keys else effectguard_win_count / len(shared_keys),
+        "pairs": paired,
+    }
+
+
+def _analyze_campaign(campaign_id: str, *, output_root: Path | None = None) -> dict[str, object]:
     root = output_root or Path("results")
     dirs = _p3_dirs(root, campaign_id)
     rows = [json.loads(path.read_text(encoding="utf-8")) for path in sorted(dirs["raw"].glob("*.json"))]
+    manifest = json.loads((dirs["manifests"] / "manifest.json").read_text(encoding="utf-8"))
     summary_by_strategy: list[dict[str, object]] = []
     for strategy in sorted({row["strategy"] for row in rows}):
         strategy_rows = [row for row in rows if row["strategy"] == strategy]
@@ -955,11 +1167,27 @@ def analyze_level_a_campaign(campaign_id: str, *, output_root: Path | None = Non
                 "mean_recovery_work": _mean([row["unweighted_recovery_action_count"] for row in strategy_rows]),
             }
         )
+    policy_seed_summary: list[dict[str, object]] = []
+    for policy_seed in sorted({row["policy_seed"] for row in rows}):
+        seed_rows = [row for row in rows if row["policy_seed"] == policy_seed]
+        policy_seed_summary.append(
+            {
+                "policy_seed": policy_seed,
+                "run_count": len(seed_rows),
+                "mean_trajectory_length": _mean([row["trajectory_length"] for row in seed_rows]),
+                "mean_semantic_gap": _mean([row["semantic_gap"] for row in seed_rows]),
+            }
+        )
+    paired_advantage = _paired_strategy_advantage(rows)
+    realism_level = manifest["realism_level"]
     report = {
         "campaign_id": campaign_id,
         "run_count": len(rows),
+        "realism_level": realism_level,
         "strategy_summary": summary_by_strategy,
-        "level_b_status": "NOT_EXECUTED",
+        "policy_seed_summary": policy_seed_summary,
+        "effectguard_vs_dependency_only": paired_advantage,
+        "level_b_status": "EXECUTED" if realism_level == "B" else "NOT_EXECUTED",
         "level_c_status": "NOT_EXECUTED",
     }
     dirs["processed"].mkdir(parents=True, exist_ok=True)
@@ -969,7 +1197,20 @@ def analyze_level_a_campaign(campaign_id: str, *, output_root: Path | None = Non
         writer = csv.DictWriter(handle, fieldnames=list(summary_by_strategy[0].keys()))
         writer.writeheader()
         writer.writerows(summary_by_strategy)
+    if policy_seed_summary:
+        with (dirs["tables"] / "policy_seed_summary.csv").open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=list(policy_seed_summary[0].keys()))
+            writer.writeheader()
+            writer.writerows(policy_seed_summary)
     return report
+
+
+def analyze_level_a_campaign(campaign_id: str, *, output_root: Path | None = None) -> dict[str, object]:
+    return _analyze_campaign(campaign_id, output_root=output_root)
+
+
+def analyze_level_b_campaign(campaign_id: str, *, output_root: Path | None = None) -> dict[str, object]:
+    return _analyze_campaign(campaign_id, output_root=output_root)
 
 
 def _mean(values: list[float]) -> float | None:
