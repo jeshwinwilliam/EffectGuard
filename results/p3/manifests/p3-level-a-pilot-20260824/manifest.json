@@ -1,6 +1,6 @@
 {
   "baseline": {
-    "current_commit": "35446d0a7f11370e59dd1cb9979dcad58796abeb",
+    "current_commit": "e10387c198d8d47ce12d3c0aacc712581a2f6065",
     "p2_main_raw_aggregate_sha256": "67af4f0ec2e357f074709ab94f373b7257a73f6dc15d5217760f454bfcc3efeb",
     "p2_main_raw_file_count": 16200,
     "pytest_expected_passes": 90
@@ -10,7 +10,7 @@
     1,
     2
   ],
-  "git_commit": "35446d0a7f11370e59dd1cb9979dcad58796abeb",
+  "git_commit": "e10387c198d8d47ce12d3c0aacc712581a2f6065",
   "phase": "P3",
   "planned_runs": 30,
   "policy_seeds": [
@@ -26,6 +26,6 @@
     "effectguard"
   ],
   "task_suite_version": "p3-level-a-v1",
-  "timestamp": "2026-08-24T00:31:34.591754+00:00",
+  "timestamp": "2026-08-24T03:10:02.245449+00:00",
   "tool_contract_version": "p3_tool_contracts_v1"
 }

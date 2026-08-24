@@ -120,10 +120,8 @@
   "environment_seed": 1,
   "fault": "CONTRADICTORY_LATE_RESOLUTION",
   "final_state": {
-    "final_state_correct": false,
-    "messages": [
-      "expected exactly one active hotel booking"
-    ],
+    "final_state_correct": true,
+    "messages": [],
     "oracle_invalid_actions": [
       "travel_valid_descendant_v1-step04-reserve_flight_B"
     ],
@@ -181,6 +179,11 @@
           "booking_id": "hotel-booking-hotel_Seattle-1",
           "hotel_id": "hotel_Seattle",
           "status": "CANCELED"
+        },
+        "recovered-hotel-2": {
+          "booking_id": "recovered-hotel-2",
+          "hotel_id": "hotel_Seattle",
+          "status": "ACTIVE"
         }
       },
       "hotel_options": {

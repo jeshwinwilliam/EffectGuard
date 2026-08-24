@@ -14,37 +14,37 @@
       "strategy": "blocking"
     },
     {
-      "correctness_rate": 0.3333333333333333,
+      "correctness_rate": 1.0,
       "mean_precision": 0.6666666666666667,
       "mean_recall": 1.0,
-      "mean_recovery_work": 1.6666666666666667,
+      "mean_recovery_work": 3.6666666666666665,
       "mean_unnecessary_selected": 0.6666666666666666,
       "run_count": 6,
       "strategy": "checkpoint"
     },
     {
-      "correctness_rate": 0.3333333333333333,
+      "correctness_rate": 1.0,
       "mean_precision": 0.6666666666666667,
       "mean_recall": 1.0,
-      "mean_recovery_work": 3.3333333333333335,
+      "mean_recovery_work": 5.333333333333333,
       "mean_unnecessary_selected": 0.6666666666666666,
       "run_count": 6,
       "strategy": "dependency_only"
     },
     {
-      "correctness_rate": 0.6666666666666666,
+      "correctness_rate": 1.0,
       "mean_precision": 1.0,
       "mean_recall": 1.0,
-      "mean_recovery_work": 1.0,
+      "mean_recovery_work": 2.3333333333333335,
       "mean_unnecessary_selected": 0.0,
       "run_count": 6,
       "strategy": "effectguard"
     },
     {
-      "correctness_rate": 0.3333333333333333,
+      "correctness_rate": 1.0,
       "mean_precision": 0.2833333333333333,
       "mean_recall": 1.0,
-      "mean_recovery_work": 3.6666666666666665,
+      "mean_recovery_work": 7.0,
       "mean_unnecessary_selected": 2.6666666666666665,
       "run_count": 6,
       "strategy": "restart"

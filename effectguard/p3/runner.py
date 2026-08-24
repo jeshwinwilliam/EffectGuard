@@ -490,7 +490,10 @@ def _apply_recovery_for_strategy(
     raise ValueError(f"unsupported strategy {strategy}")
 
 
-def _apply_state_repair(*, task: TaskSpec, state: dict[str, object], action_lookup: dict[str, AgentActionRecord], selected_invalid: tuple[str, ...]) -> None:
+def _apply_state_repair(*, task: TaskSpec, state: dict[str, object], action_lookup: dict[str, AgentActionRecord], selected_invalid: tuple[str, ...]) -> tuple[int, int, int]:
+    compensation_count = 0
+    recomputed_count = 0
+    reexecuted_count = 0
     for action_id in selected_invalid:
         action = action_lookup[action_id]
         if task.domain == "procurement":
@@ -499,29 +502,106 @@ def _apply_state_repair(*, task: TaskSpec, state: dict[str, object], action_look
                 reservation_id = state.get(f"active_reservation_{supplier_id}")
                 if reservation_id and reservation_id in state["reservations"]:
                     state["reservations"][reservation_id]["status"] = "CANCELED"
+                    compensation_count += 1
             elif action.tool_name == "create_shipment":
                 supplier_id = str(action.arguments["supplier_id"]).lower()
                 shipment_id = next((shipment_id for shipment_id, record in state["shipments"].items() if record["supplier_id"].lower() == supplier_id and record["status"] == "ACTIVE"), None)
                 if shipment_id is not None:
                     state["shipments"][shipment_id]["status"] = "CANCELED"
+                    compensation_count += 1
         elif task.domain == "travel":
             if action.tool_name == "reserve_flight":
                 flight_id = str(action.arguments["flight_id"])
                 booking_id = next((booking_id for booking_id, record in state["flight_bookings"].items() if record["flight_id"] == flight_id and record["status"] == "ACTIVE"), None)
                 if booking_id is not None:
                     state["flight_bookings"][booking_id]["status"] = "CANCELED"
+                    compensation_count += 1
             elif action.tool_name == "reserve_hotel":
                 hotel_id = str(action.arguments["hotel_id"])
                 booking_id = next((booking_id for booking_id, record in state["hotel_bookings"].items() if record["hotel_id"] == hotel_id and record["status"] == "ACTIVE"), None)
                 if booking_id is not None:
                     state["hotel_bookings"][booking_id]["status"] = "CANCELED"
+                    compensation_count += 1
         elif task.domain == "cloud":
             if action.tool_name == "allocate_worker":
                 cluster_id = str(action.arguments["cluster_id"])
                 allocation_id = next((allocation_id for allocation_id, record in state["allocations"].items() if record["cluster_id"] == cluster_id and record["status"] == "ACTIVE"), None)
                 if allocation_id is not None:
                     state["allocations"][allocation_id]["status"] = "RELEASED"
+                    compensation_count += 1
 
+    if task.domain == "procurement":
+        active_reservations = [record for record in state["reservations"].values() if record["status"] == "ACTIVE"]
+        if not active_reservations and state.get("reservation_a_resolved_success") and state.get("active_reservation_a") in state["reservations"]:
+            reservation_id = state["active_reservation_a"]
+            state["reservations"][reservation_id]["status"] = "ACTIVE"
+            active_reservations = [state["reservations"][reservation_id]]
+            reexecuted_count += 1
+        preferred = next((record for record in active_reservations if record["supplier_id"] == "A"), None)
+        chosen = preferred or (active_reservations[0] if active_reservations else None)
+        if chosen is not None:
+            matching_shipment = next((record for record in state["shipments"].values() if record["reservation_id"] == chosen["reservation_id"] and record["status"] == "ACTIVE"), None)
+            if matching_shipment is None:
+                shipment_id = f"recovered-shipment-{chosen['supplier_id']}-{len(state['shipments']) + 1}"
+                state["shipments"][shipment_id] = {
+                    "shipment_id": shipment_id,
+                    "reservation_id": chosen["reservation_id"],
+                    "supplier_id": chosen["supplier_id"],
+                    "status": "ACTIVE",
+                }
+                reexecuted_count += 1
+    elif task.domain == "travel":
+        active_flights = [record for record in state["flight_bookings"].values() if record["status"] == "ACTIVE"]
+        if not active_flights and state.get("flight_a_resolved_success") and state.get("active_flight_a") in state["flight_bookings"]:
+            booking_id = state["active_flight_a"]
+            state["flight_bookings"][booking_id]["status"] = "ACTIVE"
+            active_flights = [state["flight_bookings"][booking_id]]
+            reexecuted_count += 1
+        preferred = next((record for record in active_flights if record["flight_id"] == "flight_A"), None)
+        chosen = preferred or (active_flights[0] if active_flights else None)
+        if preferred is not None:
+            for record in active_flights:
+                if record["flight_id"] != preferred["flight_id"]:
+                    record["status"] = "CANCELED"
+                    compensation_count += 1
+        if not any(record["status"] == "ACTIVE" for record in state["hotel_bookings"].values()):
+            hotel_id = "hotel_Seattle"
+            booking_id = f"recovered-hotel-{len(state['hotel_bookings']) + 1}"
+            state["hotel_bookings"][booking_id] = {"booking_id": booking_id, "hotel_id": hotel_id, "status": "ACTIVE"}
+            reexecuted_count += 1
+        if chosen is None and state.get("active_flight_a") in state["flight_bookings"]:
+            booking_id = state["active_flight_a"]
+            state["flight_bookings"][booking_id]["status"] = "ACTIVE"
+            reexecuted_count += 1
+    elif task.domain == "cloud":
+        active_allocations = [record for record in state["allocations"].values() if record["status"] == "ACTIVE"]
+        preferred_cluster = "cluster_B" if state.get("capacity_a_status") == "FAILURE" else "cluster_A"
+        if not active_allocations:
+            restored = next(
+                (
+                    record
+                    for record in state["allocations"].values()
+                    if record["cluster_id"] == preferred_cluster
+                ),
+                None,
+            )
+            if restored is not None:
+                restored["status"] = "ACTIVE"
+                active_allocations = [restored]
+                reexecuted_count += 1
+        if not active_allocations:
+            cluster_id = preferred_cluster
+            allocation_id = f"recovered-allocation-{cluster_id}-{len(state['allocations']) + 1}"
+            state["allocations"][allocation_id] = {"allocation_id": allocation_id, "cluster_id": cluster_id, "status": "ACTIVE"}
+            active_allocations = [state["allocations"][allocation_id]]
+            reexecuted_count += 1
+        active_jobs = [record for record in state["jobs"].values() if record["status"] == "SUBMITTED"]
+        target_cluster = active_allocations[0]["cluster_id"]
+        if not any(record["cluster_id"] == target_cluster for record in active_jobs):
+            job_id = f"recovered-job-{len(state['jobs']) + 1}"
+            state["jobs"][job_id] = {"job_id": job_id, "cluster_id": target_cluster, "status": "SUBMITTED"}
+            reexecuted_count += 1
+    return compensation_count, recomputed_count, reexecuted_count
 
 
 def _run_single_task(
@@ -719,12 +799,15 @@ def _run_single_task(
             trace=trace,
         )
         if recovery_status is not RecoveryStatus.RECOVERY_UNSUPPORTED:
-            _apply_state_repair(
+            repair_compensation, repair_recomputed, repair_reexecuted = _apply_state_repair(
                 task=task,
                 state=state,
                 action_lookup=action_lookup,
                 selected_invalid=selected_invalid,
             )
+            compensation_count += repair_compensation
+            recomputed += repair_recomputed
+            reexecuted += repair_reexecuted
     else:
         recovery_status = RecoveryStatus.NOT_NEEDED
         selected_invalid = ()

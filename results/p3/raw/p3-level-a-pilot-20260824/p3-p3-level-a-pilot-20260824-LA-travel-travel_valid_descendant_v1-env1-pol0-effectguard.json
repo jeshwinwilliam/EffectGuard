@@ -1,7 +1,7 @@
 {
   "assumptions_created": 1,
-  "compensation_calls": 1,
-  "compensation_count": 1,
+  "compensation_calls": 2,
+  "compensation_count": 2,
   "contradiction_detected": true,
   "contradictions": 1,
   "domain": "travel",
@@ -52,7 +52,7 @@
   "unique_actions": 6,
   "unknown_validity_count": 0,
   "unnecessary_selected_operations": 0,
-  "unweighted_recovery_action_count": 1,
+  "unweighted_recovery_action_count": 2,
   "verification_calls": 0,
   "virtual_latency_ms": 5600
 }

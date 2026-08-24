@@ -104,10 +104,8 @@
   "environment_seed": 1,
   "fault": "TIMEOUT_AFTER_COMMIT",
   "final_state": {
-    "final_state_correct": false,
-    "messages": [
-      "expected exactly one active shipment"
-    ],
+    "final_state_correct": true,
+    "messages": [],
     "oracle_invalid_actions": [
       "procurement_fallback_unknown_v1-step04-reserve_inventory_B",
       "procurement_fallback_unknown_v1-step05-create_shipment_B"
@@ -146,6 +144,12 @@
       },
       "shipment_b_visible": true,
       "shipments": {
+        "recovered-shipment-A-2": {
+          "reservation_id": "reservation-A-1",
+          "shipment_id": "recovered-shipment-A-2",
+          "status": "ACTIVE",
+          "supplier_id": "A"
+        },
         "shipment-B-1": {
           "reservation_id": "reservation-B-1",
           "shipment_id": "shipment-B-1",
