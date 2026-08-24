@@ -1,0 +1,144 @@
+{
+  "task_suite_version": "p3-level-a-v1",
+  "tasks": [
+    {
+      "task_id": "procurement_fallback_unknown_v1",
+      "domain": "procurement",
+      "scenario_family": "S1_FALLBACK_AFTER_UNKNOWN",
+      "difficulty": "simple",
+      "available_tools": [
+        "check_supplier",
+        "reserve_inventory",
+        "release_inventory",
+        "create_shipment",
+        "cancel_shipment",
+        "calculate_tax"
+      ],
+      "user_goal": "Obtain required quantity and create exactly one valid shipment.",
+      "constraints": {
+        "goal": "obtain required quantity and create exactly one valid shipment",
+        "rules": [
+          "preferred supplier A if available",
+          "required quantity = 3",
+          "no duplicate active reservations",
+          "shipment must correspond to active reservation"
+        ]
+      },
+      "initial_state": {
+        "required_quantity": 3,
+        "suppliers": {
+          "A": { "available": true },
+          "B": { "available": true }
+        },
+        "reservations": {},
+        "shipments": {},
+        "hidden_commits": {}
+      },
+      "ambiguity_plan": {
+        "ambiguity_type": "TIMEOUT_AFTER_COMMIT",
+        "action_key": "reserve_inventory_A",
+        "resolved_status": "SUCCESS",
+        "resolution_delay_ms": 5000,
+        "note": "simulated timeout-after-commit on supplier A reservation"
+      },
+      "expected_invariant_schema": [
+        "exactly_one_active_reservation",
+        "exactly_one_active_shipment",
+        "shipment_matches_reservation"
+      ]
+    },
+    {
+      "task_id": "travel_valid_descendant_v1",
+      "domain": "travel",
+      "scenario_family": "S4_VALID_DESCENDANT",
+      "difficulty": "medium",
+      "available_tools": [
+        "search_flights",
+        "reserve_flight",
+        "cancel_flight",
+        "search_hotel",
+        "reserve_hotel",
+        "cancel_hotel",
+        "calculate_trip_cost"
+      ],
+      "user_goal": "Book one valid flight and one compatible hotel for Seattle.",
+      "constraints": {
+        "goal": "book one valid flight and one compatible hotel",
+        "rules": [
+          "destination = Seattle",
+          "arrival before 18:00",
+          "total budget <= 900",
+          "no duplicate active flight bookings",
+          "hotel dates match trip dates"
+        ]
+      },
+      "initial_state": {
+        "flight_options": {
+          "flight_A": { "destination": "Seattle", "arrival_hour": 17, "price_minor": 50000 },
+          "flight_B": { "destination": "Seattle", "arrival_hour": 17, "price_minor": 52000 }
+        },
+        "hotel_options": {
+          "hotel_Seattle": { "destination": "Seattle", "price_minor": 28000 }
+        },
+        "flight_bookings": {},
+        "hotel_bookings": {},
+        "hidden_commits": {}
+      },
+      "ambiguity_plan": {
+        "ambiguity_type": "CONTRADICTORY_LATE_RESOLUTION",
+        "action_key": "reserve_flight_A",
+        "resolved_status": "SUCCESS",
+        "resolution_delay_ms": 5000,
+        "note": "simulated contradictory late resolution on preferred flight reservation"
+      },
+      "expected_invariant_schema": [
+        "exactly_one_active_flight_booking",
+        "exactly_one_active_hotel_booking",
+        "hotel_destination_matches_flight"
+      ]
+    },
+    {
+      "task_id": "cloud_assumption_match_v1",
+      "domain": "cloud",
+      "scenario_family": "S8_ASSUMPTION_MATCH",
+      "difficulty": "simple",
+      "available_tools": [
+        "check_capacity",
+        "allocate_worker",
+        "release_worker",
+        "submit_job",
+        "query_job_status",
+        "calculate_resource_plan"
+      ],
+      "user_goal": "Allocate one worker and submit exactly one valid job.",
+      "constraints": {
+        "goal": "allocate one worker and submit exactly one valid job",
+        "rules": [
+          "use cluster A if capacity is available",
+          "no duplicate active worker allocations",
+          "job must correspond to active allocation"
+        ]
+      },
+      "initial_state": {
+        "clusters": {
+          "cluster_A": { "available": false },
+          "cluster_B": { "available": true }
+        },
+        "allocations": {},
+        "jobs": {}
+      },
+      "ambiguity_plan": {
+        "ambiguity_type": "UNKNOWN_THEN_FAILURE",
+        "action_key": "check_capacity_A",
+        "resolved_status": "FAILURE",
+        "resolution_delay_ms": 5000,
+        "note": "simulated delayed failure confirmation for primary cluster capacity"
+      },
+      "expected_invariant_schema": [
+        "exactly_one_active_allocation",
+        "exactly_one_submitted_job",
+        "job_matches_allocation"
+      ]
+    }
+  ]
+}
