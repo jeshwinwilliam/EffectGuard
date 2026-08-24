@@ -1,0 +1,9 @@
+{
+  "campaign_id": "p3-level-a-pilot-20260824",
+  "realism_level": "A",
+  "task_suite_path": "experiments/p3/tasks/level_a_tasks_v1.json",
+  "task_suite_version": "p3-level-a-v1",
+  "environment_seeds": [1, 2],
+  "policy_seeds": [0],
+  "strategies": ["blocking", "restart", "checkpoint", "dependency_only", "effectguard"]
+}

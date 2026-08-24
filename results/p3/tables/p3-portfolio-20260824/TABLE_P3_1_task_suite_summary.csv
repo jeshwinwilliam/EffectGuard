@@ -1,0 +1,6 @@
+domain,scenario_family,difficulty,task_count
+cloud,S8_ASSUMPTION_MATCH,medium,1
+cloud,S8_ASSUMPTION_MATCH,simple,1
+procurement,S1_FALLBACK_AFTER_UNKNOWN,medium,1
+procurement,S1_FALLBACK_AFTER_UNKNOWN,simple,1
+travel,S4_VALID_DESCENDANT,medium,2

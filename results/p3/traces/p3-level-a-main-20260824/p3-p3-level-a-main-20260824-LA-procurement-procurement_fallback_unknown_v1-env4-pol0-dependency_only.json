@@ -1,0 +1,352 @@
+{
+  "actions": [
+    {
+      "action_id": "procurement_fallback_unknown_v1-step01-check_supplier_A",
+      "action_type": "tool_call",
+      "arguments": {
+        "supplier_id": "A"
+      },
+      "assumption_dependencies": [],
+      "external_effect_class": "READ",
+      "logical_operation_id": "check_supplier_A",
+      "observation_dependencies": [
+        "procurement_fallback_unknown_v1-obs-goal"
+      ],
+      "produced_observation_id": "procurement_fallback_unknown_v1-obs-01-supplier_a",
+      "step_index": 1,
+      "timestamp_ms": 0,
+      "tool_name": "check_supplier"
+    },
+    {
+      "action_id": "procurement_fallback_unknown_v1-step02-reserve_inventory_A",
+      "action_type": "tool_call",
+      "arguments": {
+        "supplier_id": "A"
+      },
+      "assumption_dependencies": [],
+      "external_effect_class": "COMPENSABLE",
+      "logical_operation_id": "reserve_inventory_A",
+      "observation_dependencies": [
+        "procurement_fallback_unknown_v1-obs-01-supplier_a"
+      ],
+      "produced_observation_id": "procurement_fallback_unknown_v1-obs-02-reservation_a",
+      "step_index": 2,
+      "timestamp_ms": 100,
+      "tool_name": "reserve_inventory"
+    },
+    {
+      "action_id": "procurement_fallback_unknown_v1-step03-calculate_tax_task",
+      "action_type": "tool_call",
+      "arguments": {},
+      "assumption_dependencies": [],
+      "external_effect_class": "PURE",
+      "logical_operation_id": "calculate_tax_task",
+      "observation_dependencies": [
+        "procurement_fallback_unknown_v1-obs-01-supplier_a"
+      ],
+      "produced_observation_id": "procurement_fallback_unknown_v1-obs-03-tax",
+      "step_index": 3,
+      "timestamp_ms": 200,
+      "tool_name": "calculate_tax"
+    },
+    {
+      "action_id": "procurement_fallback_unknown_v1-step04-reserve_inventory_B",
+      "action_type": "tool_call",
+      "arguments": {
+        "supplier_id": "B"
+      },
+      "assumption_dependencies": [
+        "assumption-reserve_a"
+      ],
+      "external_effect_class": "COMPENSABLE",
+      "logical_operation_id": "reserve_inventory_B",
+      "observation_dependencies": [
+        "procurement_fallback_unknown_v1-obs-01-supplier_a",
+        "procurement_fallback_unknown_v1-obs-02-reservation_a",
+        "procurement_fallback_unknown_v1-obs-03-tax",
+        "procurement_fallback_unknown_v1-obs-goal"
+      ],
+      "produced_observation_id": "procurement_fallback_unknown_v1-obs-04-reservation_b",
+      "step_index": 4,
+      "timestamp_ms": 300,
+      "tool_name": "reserve_inventory"
+    },
+    {
+      "action_id": "procurement_fallback_unknown_v1-step05-create_shipment_B",
+      "action_type": "tool_call",
+      "arguments": {
+        "reservation_id": "reservation-B-1",
+        "supplier_id": "B"
+      },
+      "assumption_dependencies": [
+        "assumption-reserve_a"
+      ],
+      "external_effect_class": "REVERSIBLE",
+      "logical_operation_id": "create_shipment_B",
+      "observation_dependencies": [
+        "procurement_fallback_unknown_v1-obs-04-reservation_b"
+      ],
+      "produced_observation_id": "procurement_fallback_unknown_v1-obs-05-shipment_b",
+      "step_index": 5,
+      "timestamp_ms": 400,
+      "tool_name": "create_shipment"
+    }
+  ],
+  "assumptions": [
+    {
+      "assumed_state": "FAILURE",
+      "assumption_id": "assumption-reserve_a",
+      "source_action_id": "procurement_fallback_unknown_v1-step02-reserve_inventory_A",
+      "virtual_time_ms": 100
+    }
+  ],
+  "domain": "procurement",
+  "environment_seed": 4,
+  "fault": "TIMEOUT_AFTER_COMMIT",
+  "final_state": {
+    "final_state_correct": true,
+    "messages": [],
+    "oracle_invalid_actions": [
+      "procurement_fallback_unknown_v1-step04-reserve_inventory_B",
+      "procurement_fallback_unknown_v1-step05-create_shipment_B"
+    ],
+    "selected_invalid_actions": [
+      "procurement_fallback_unknown_v1-step04-reserve_inventory_B",
+      "procurement_fallback_unknown_v1-step05-create_shipment_B"
+    ],
+    "state": {
+      "active_reservation_a": "reservation-A-1",
+      "active_reservation_b": "reservation-B-1",
+      "assumption_reserve_a_failure": true,
+      "environment_seed": 4,
+      "hidden_commits": {},
+      "required_quantity": 3,
+      "reservation_a_attempted": true,
+      "reservation_a_resolved_success": true,
+      "reservation_a_status": "SUCCESS",
+      "reservation_a_visible": true,
+      "reservation_b_attempted": true,
+      "reservation_b_status": "SUCCESS",
+      "reservation_b_visible": true,
+      "reservations": {
+        "reservation-A-1": {
+          "quantity": 3,
+          "reservation_id": "reservation-A-1",
+          "status": "ACTIVE",
+          "supplier_id": "A"
+        },
+        "reservation-B-1": {
+          "quantity": 3,
+          "reservation_id": "reservation-B-1",
+          "status": "CANCELED",
+          "supplier_id": "B"
+        }
+      },
+      "shipment_b_visible": true,
+      "shipments": {
+        "recovered-shipment-A-2": {
+          "reservation_id": "reservation-A-1",
+          "shipment_id": "recovered-shipment-A-2",
+          "status": "ACTIVE",
+          "supplier_id": "A"
+        },
+        "shipment-B-1": {
+          "reservation_id": "reservation-B-1",
+          "shipment_id": "shipment-B-1",
+          "status": "CANCELED",
+          "supplier_id": "B"
+        }
+      },
+      "supplier_a_checked": true,
+      "supplier_a_visible": true,
+      "suppliers": {
+        "A": {
+          "available": true
+        },
+        "B": {
+          "available": true
+        }
+      },
+      "tax_calculated": true
+    }
+  },
+  "late_resolutions": [
+    {
+      "action_id": "reserve_inventory_A",
+      "due_time_ms": 5100,
+      "note": "simulated timeout-after-commit on supplier A reservation",
+      "resolved_status": "SUCCESS",
+      "tool_name": "reserve_inventory"
+    }
+  ],
+  "observations": [
+    {
+      "assumption_id": null,
+      "observation_id": "procurement_fallback_unknown_v1-obs-goal",
+      "provenance": [],
+      "source": "task_goal",
+      "value": {
+        "constraints": [
+          "preferred supplier A if available",
+          "required quantity = 3",
+          "no duplicate active reservations",
+          "shipment must correspond to active reservation"
+        ],
+        "goal": "Obtain required quantity and create exactly one valid shipment."
+      },
+      "virtual_time_ms": 0
+    },
+    {
+      "assumption_id": null,
+      "observation_id": "procurement_fallback_unknown_v1-obs-01-supplier_a",
+      "provenance": [
+        "procurement_fallback_unknown_v1-step01-check_supplier_A"
+      ],
+      "source": "check_supplier",
+      "value": {
+        "available": true,
+        "supplier_id": "A"
+      },
+      "virtual_time_ms": 0
+    },
+    {
+      "assumption_id": null,
+      "observation_id": "procurement_fallback_unknown_v1-obs-02-reservation_a",
+      "provenance": [
+        "procurement_fallback_unknown_v1-step02-reserve_inventory_A"
+      ],
+      "source": "reserve_inventory",
+      "value": {
+        "reservation_id": "reservation-A-1",
+        "status": "UNKNOWN",
+        "supplier_id": "A"
+      },
+      "virtual_time_ms": 100
+    },
+    {
+      "assumption_id": null,
+      "observation_id": "procurement_fallback_unknown_v1-obs-03-tax",
+      "provenance": [
+        "procurement_fallback_unknown_v1-step03-calculate_tax_task"
+      ],
+      "source": "calculate_tax",
+      "value": {
+        "tax_minor": 375
+      },
+      "virtual_time_ms": 200
+    },
+    {
+      "assumption_id": "assumption-reserve_a",
+      "observation_id": "procurement_fallback_unknown_v1-obs-04-reservation_b",
+      "provenance": [
+        "procurement_fallback_unknown_v1-step04-reserve_inventory_B"
+      ],
+      "source": "reserve_inventory",
+      "value": {
+        "reservation_id": "reservation-B-1",
+        "status": "SUCCESS",
+        "supplier_id": "B"
+      },
+      "virtual_time_ms": 300
+    },
+    {
+      "assumption_id": "assumption-reserve_a",
+      "observation_id": "procurement_fallback_unknown_v1-obs-05-shipment_b",
+      "provenance": [
+        "procurement_fallback_unknown_v1-step05-create_shipment_B"
+      ],
+      "source": "create_shipment",
+      "value": {
+        "shipment_id": "shipment-B-1",
+        "status": "ACTIVE"
+      },
+      "virtual_time_ms": 400
+    },
+    {
+      "assumption_id": null,
+      "observation_id": "procurement_fallback_unknown_v1-resolution-reserve_inventory_A",
+      "provenance": [
+        "reserve_inventory_A"
+      ],
+      "source": "late_resolution",
+      "value": {
+        "reservation_id": "reservation-A-1",
+        "status": "SUCCESS",
+        "supplier_id": "A"
+      },
+      "virtual_time_ms": 5500
+    }
+  ],
+  "policy_seed": 0,
+  "realism_level": "A",
+  "recovery_actions": [
+    {
+      "action": "dependency_only_select",
+      "selected": [
+        "procurement_fallback_unknown_v1-step04-reserve_inventory_B",
+        "procurement_fallback_unknown_v1-step05-create_shipment_B"
+      ],
+      "strategy": "dependency_only"
+    }
+  ],
+  "strategy": "dependency_only",
+  "task_id": "procurement_fallback_unknown_v1",
+  "tool_results": [
+    {
+      "action_id": "procurement_fallback_unknown_v1-step01-check_supplier_A",
+      "actual_status": "SUCCESS",
+      "note": "supplier availability read",
+      "observed_status": "SUCCESS",
+      "tool_name": "check_supplier",
+      "value": {
+        "available": true,
+        "supplier_id": "A"
+      }
+    },
+    {
+      "action_id": "procurement_fallback_unknown_v1-step02-reserve_inventory_A",
+      "actual_status": "SUCCESS",
+      "note": "simulated timeout-after-commit on supplier A reservation",
+      "observed_status": "UNKNOWN",
+      "tool_name": "reserve_inventory",
+      "value": {
+        "reservation_id": "reservation-A-1",
+        "status": "UNKNOWN",
+        "supplier_id": "A"
+      }
+    },
+    {
+      "action_id": "procurement_fallback_unknown_v1-step03-calculate_tax_task",
+      "actual_status": "SUCCESS",
+      "note": "tax computed",
+      "observed_status": "SUCCESS",
+      "tool_name": "calculate_tax",
+      "value": {
+        "tax_minor": 375
+      }
+    },
+    {
+      "action_id": "procurement_fallback_unknown_v1-step04-reserve_inventory_B",
+      "actual_status": "SUCCESS",
+      "note": "reservation visible immediately",
+      "observed_status": "SUCCESS",
+      "tool_name": "reserve_inventory",
+      "value": {
+        "reservation_id": "reservation-B-1",
+        "status": "SUCCESS",
+        "supplier_id": "B"
+      }
+    },
+    {
+      "action_id": "procurement_fallback_unknown_v1-step05-create_shipment_B",
+      "actual_status": "SUCCESS",
+      "note": "shipment created",
+      "observed_status": "SUCCESS",
+      "tool_name": "create_shipment",
+      "value": {
+        "shipment_id": "shipment-B-1",
+        "status": "ACTIVE"
+      }
+    }
+  ]
+}

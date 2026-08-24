@@ -1,0 +1,11 @@
+difficulty,strategy,run_count,correctness_rate,mean_precision,mean_recall,mean_unnecessary_selected,mean_recovery_work,validity_unknown_rate,unsupported_rate,mean_semantic_gap
+medium,blocking,91,1.0,,,0.0,0.0,0.0,0.0,0.0
+medium,checkpoint,91,1.0,0.5333333333333333,1.0,1.0769230769230769,4.384615384615385,0.0,0.0,1.0769230769230769
+medium,dependency_only,91,1.0,0.5333333333333333,1.0,1.0769230769230769,6.461538461538462,0.0,0.0,1.0769230769230769
+medium,effectguard,91,1.0,1.0,1.0,0.0,2.230769230769231,0.0,0.0,1.0769230769230769
+medium,restart,91,1.0,0.23666666666666666,1.0,3.3846153846153846,8.23076923076923,0.0,0.0,1.0769230769230769
+simple,blocking,56,1.0,,,0.0,0.0,0.0,0.0,0.0
+simple,checkpoint,56,1.0,1.0,1.0,0.0,2.5,0.0,0.0,0.0
+simple,dependency_only,56,1.0,1.0,1.0,0.0,3.5,0.0,0.0,0.0
+simple,effectguard,56,1.0,1.0,1.0,0.0,2.5,0.0,0.0,0.0
+simple,restart,56,1.0,0.4,1.0,1.5,5.0,0.0,0.0,0.0

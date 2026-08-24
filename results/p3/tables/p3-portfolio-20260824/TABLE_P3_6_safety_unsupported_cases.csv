@@ -1,0 +1,4 @@
+scenario_family,unsupported_rate,validity_unknown_rate
+S1_FALLBACK_AFTER_UNKNOWN,0.0,0.0
+S4_VALID_DESCENDANT,0.0,0.0
+S8_ASSUMPTION_MATCH,0.0,0.0

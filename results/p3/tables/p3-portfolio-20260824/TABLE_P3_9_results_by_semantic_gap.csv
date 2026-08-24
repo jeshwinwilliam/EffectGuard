@@ -1,0 +1,10 @@
+strategy,semantic_gap_bucket,run_count,mean_precision,mean_unnecessary_selected,mean_recovery_work
+blocking,gap_0,147,,0.0,0.0
+checkpoint,gap_0,98,1.0,0.0,2.5
+checkpoint,gap_2,49,0.3333333333333333,2.0,6.0
+dependency_only,gap_0,98,1.0,0.0,3.5
+dependency_only,gap_2,49,0.3333333333333333,2.0,9.0
+effectguard,gap_0,98,1.0,0.0,2.5
+effectguard,gap_2,49,1.0,0.0,2.0
+restart,gap_0,98,0.4,1.5,5.0
+restart,gap_2,49,0.16666666666666666,5.0,11.0

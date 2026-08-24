@@ -1,7 +1,43 @@
 {
   "campaign_id": "p3-level-a-pilot-20260824",
+  "effectguard_vs_dependency_only": {
+    "effectguard_win_count": 2,
+    "effectguard_win_rate": 1.0,
+    "paired_run_count": 2,
+    "pairs": [
+      {
+        "dependency_only_precision": 0.3333333333333333,
+        "dependency_only_unnecessary_selected": 2,
+        "effectguard_better": true,
+        "effectguard_precision": 1.0,
+        "effectguard_unnecessary_selected": 0,
+        "environment_seed": 1,
+        "policy_seed": 0,
+        "task_id": "travel_valid_descendant_v1"
+      },
+      {
+        "dependency_only_precision": 0.3333333333333333,
+        "dependency_only_unnecessary_selected": 2,
+        "effectguard_better": true,
+        "effectguard_precision": 1.0,
+        "effectguard_unnecessary_selected": 0,
+        "environment_seed": 2,
+        "policy_seed": 0,
+        "task_id": "travel_valid_descendant_v1"
+      }
+    ]
+  },
   "level_b_status": "NOT_EXECUTED",
   "level_c_status": "NOT_EXECUTED",
+  "policy_seed_summary": [
+    {
+      "mean_semantic_gap": 0.5333333333333333,
+      "mean_trajectory_length": 4.733333333333333,
+      "policy_seed": 0,
+      "run_count": 30
+    }
+  ],
+  "realism_level": "A",
   "run_count": 30,
   "strategy_summary": [
     {

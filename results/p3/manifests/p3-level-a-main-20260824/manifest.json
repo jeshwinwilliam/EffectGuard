@@ -1,0 +1,34 @@
+{
+  "baseline": {
+    "current_commit": "95705221fcb378ef956b60542f38d44fff647cdf",
+    "p2_main_raw_aggregate_sha256": "67af4f0ec2e357f074709ab94f373b7257a73f6dc15d5217760f454bfcc3efeb",
+    "p2_main_raw_file_count": 16200,
+    "pytest_expected_passes": 90
+  },
+  "campaign_id": "p3-level-a-main-20260824",
+  "environment_seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "git_commit": "95705221fcb378ef956b60542f38d44fff647cdf",
+  "phase": "P3",
+  "planned_runs": 75,
+  "policy_seeds": [
+    0
+  ],
+  "policy_version": "level_a_deterministic_policy_v1",
+  "realism_level": "A",
+  "strategies": [
+    "blocking",
+    "restart",
+    "checkpoint",
+    "dependency_only",
+    "effectguard"
+  ],
+  "task_suite_version": "p3-level-a-v1",
+  "timestamp": "2026-08-24T04:39:17.208386+00:00",
+  "tool_contract_version": "p3_tool_contracts_v1"
+}

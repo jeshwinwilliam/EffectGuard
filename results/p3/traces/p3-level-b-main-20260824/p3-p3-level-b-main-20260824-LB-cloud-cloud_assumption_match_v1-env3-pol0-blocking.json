@@ -1,0 +1,272 @@
+{
+  "actions": [
+    {
+      "action_id": "cloud_assumption_match_v1-step01-check_capacity_A",
+      "action_type": "tool_call",
+      "arguments": {
+        "cluster_id": "cluster_A"
+      },
+      "assumption_dependencies": [],
+      "external_effect_class": "READ",
+      "logical_operation_id": "check_capacity_A",
+      "observation_dependencies": [
+        "cloud_assumption_match_v1-obs-goal"
+      ],
+      "produced_observation_id": "cloud_assumption_match_v1-obs-01-capacity_a",
+      "step_index": 1,
+      "timestamp_ms": 0,
+      "tool_name": "check_capacity"
+    },
+    {
+      "action_id": "cloud_assumption_match_v1-step02-calculate_resource_plan_task",
+      "action_type": "tool_call",
+      "arguments": {},
+      "assumption_dependencies": [],
+      "external_effect_class": "PURE",
+      "logical_operation_id": "calculate_resource_plan_task",
+      "observation_dependencies": [
+        "cloud_assumption_match_v1-obs-01-capacity_a",
+        "cloud_assumption_match_v1-obs-goal",
+        "cloud_assumption_match_v1-resolution-check_capacity_A"
+      ],
+      "produced_observation_id": "cloud_assumption_match_v1-obs-02-resource_plan",
+      "step_index": 2,
+      "timestamp_ms": 5100,
+      "tool_name": "calculate_resource_plan"
+    },
+    {
+      "action_id": "cloud_assumption_match_v1-step03-allocate_worker_B",
+      "action_type": "tool_call",
+      "arguments": {
+        "cluster_id": "cluster_B"
+      },
+      "assumption_dependencies": [],
+      "external_effect_class": "COMPENSABLE",
+      "logical_operation_id": "allocate_worker_B",
+      "observation_dependencies": [
+        "cloud_assumption_match_v1-obs-01-capacity_a",
+        "cloud_assumption_match_v1-obs-02-resource_plan",
+        "cloud_assumption_match_v1-obs-goal",
+        "cloud_assumption_match_v1-resolution-check_capacity_A"
+      ],
+      "produced_observation_id": "cloud_assumption_match_v1-obs-03-allocation_b",
+      "step_index": 3,
+      "timestamp_ms": 5200,
+      "tool_name": "allocate_worker"
+    },
+    {
+      "action_id": "cloud_assumption_match_v1-step04-submit_job_B",
+      "action_type": "tool_call",
+      "arguments": {
+        "allocation_id": "alloc-cluster_B-1",
+        "cluster_id": "cluster_B"
+      },
+      "assumption_dependencies": [],
+      "external_effect_class": "IRREVERSIBLE",
+      "logical_operation_id": "submit_job_B",
+      "observation_dependencies": [
+        "cloud_assumption_match_v1-obs-03-allocation_b"
+      ],
+      "produced_observation_id": "cloud_assumption_match_v1-obs-04-job_b",
+      "step_index": 4,
+      "timestamp_ms": 5300,
+      "tool_name": "submit_job"
+    }
+  ],
+  "assumptions": [
+    {
+      "assumed_state": "FAILURE",
+      "assumption_id": "assumption-cluster_A",
+      "source_action_id": "cloud_assumption_match_v1-step01-check_capacity_A",
+      "virtual_time_ms": 0
+    }
+  ],
+  "domain": "cloud",
+  "environment_seed": 3,
+  "fault": "UNKNOWN_THEN_FAILURE",
+  "final_state": {
+    "final_state_correct": true,
+    "messages": [],
+    "oracle_invalid_actions": [],
+    "selected_invalid_actions": [],
+    "state": {
+      "active_allocation_b": "alloc-cluster_B-1",
+      "allocation_b_attempted": true,
+      "allocations": {
+        "alloc-cluster_B-1": {
+          "allocation_id": "alloc-cluster_B-1",
+          "cluster_id": "cluster_B",
+          "status": "ACTIVE"
+        }
+      },
+      "capacity_a_attempted": true,
+      "capacity_a_resolved_failure": true,
+      "capacity_a_status": "FAILURE",
+      "clusters": {
+        "cluster_A": {
+          "available": false
+        },
+        "cluster_B": {
+          "available": true
+        }
+      },
+      "environment_seed": 3,
+      "job_b_attempted": true,
+      "job_b_visible": true,
+      "jobs": {
+        "job-1": {
+          "cluster_id": "cluster_B",
+          "job_id": "job-1",
+          "status": "SUBMITTED"
+        }
+      },
+      "resource_plan_calculated": true
+    }
+  },
+  "late_resolutions": [
+    {
+      "action_id": "check_capacity_A",
+      "due_time_ms": 5000,
+      "note": "simulated delayed failure confirmation for primary cluster capacity",
+      "resolved_status": "FAILURE",
+      "tool_name": "check_capacity"
+    }
+  ],
+  "observations": [
+    {
+      "assumption_id": null,
+      "observation_id": "cloud_assumption_match_v1-obs-goal",
+      "provenance": [],
+      "source": "task_goal",
+      "value": {
+        "constraints": [
+          "use cluster A if capacity is available",
+          "no duplicate active worker allocations",
+          "job must correspond to active allocation"
+        ],
+        "goal": "Allocate one worker and submit exactly one valid job."
+      },
+      "virtual_time_ms": 0
+    },
+    {
+      "assumption_id": null,
+      "observation_id": "cloud_assumption_match_v1-obs-01-capacity_a",
+      "provenance": [
+        "cloud_assumption_match_v1-step01-check_capacity_A"
+      ],
+      "source": "check_capacity",
+      "value": {
+        "available": null,
+        "cluster_id": "cluster_A"
+      },
+      "virtual_time_ms": 0
+    },
+    {
+      "assumption_id": null,
+      "observation_id": "cloud_assumption_match_v1-resolution-check_capacity_A",
+      "provenance": [
+        "check_capacity_A"
+      ],
+      "source": "late_resolution",
+      "value": {
+        "available": true,
+        "cluster_id": "cluster_A"
+      },
+      "virtual_time_ms": 5100
+    },
+    {
+      "assumption_id": null,
+      "observation_id": "cloud_assumption_match_v1-obs-02-resource_plan",
+      "provenance": [
+        "cloud_assumption_match_v1-step02-calculate_resource_plan_task"
+      ],
+      "source": "calculate_resource_plan",
+      "value": {
+        "plan": "lightweight-plan"
+      },
+      "virtual_time_ms": 5100
+    },
+    {
+      "assumption_id": null,
+      "observation_id": "cloud_assumption_match_v1-obs-03-allocation_b",
+      "provenance": [
+        "cloud_assumption_match_v1-step03-allocate_worker_B"
+      ],
+      "source": "allocate_worker",
+      "value": {
+        "allocation_id": "alloc-cluster_B-1",
+        "cluster_id": "cluster_B",
+        "status": "ACTIVE"
+      },
+      "virtual_time_ms": 5200
+    },
+    {
+      "assumption_id": null,
+      "observation_id": "cloud_assumption_match_v1-obs-04-job_b",
+      "provenance": [
+        "cloud_assumption_match_v1-step04-submit_job_B"
+      ],
+      "source": "submit_job",
+      "value": {
+        "allocation_id": "alloc-cluster_B-1",
+        "cluster_id": "cluster_B",
+        "job_id": "job-1",
+        "status": "SUBMITTED"
+      },
+      "virtual_time_ms": 5300
+    }
+  ],
+  "policy_seed": 0,
+  "realism_level": "B",
+  "recovery_actions": [],
+  "strategy": "blocking",
+  "task_id": "cloud_assumption_match_v1",
+  "tool_results": [
+    {
+      "action_id": "cloud_assumption_match_v1-step01-check_capacity_A",
+      "actual_status": "SUCCESS",
+      "note": "simulated delayed failure confirmation for primary cluster capacity",
+      "observed_status": "UNKNOWN",
+      "tool_name": "check_capacity",
+      "value": {
+        "available": null,
+        "cluster_id": "cluster_A"
+      }
+    },
+    {
+      "action_id": "cloud_assumption_match_v1-step02-calculate_resource_plan_task",
+      "actual_status": "SUCCESS",
+      "note": "resource plan calculated",
+      "observed_status": "SUCCESS",
+      "tool_name": "calculate_resource_plan",
+      "value": {
+        "plan": "lightweight-plan"
+      }
+    },
+    {
+      "action_id": "cloud_assumption_match_v1-step03-allocate_worker_B",
+      "actual_status": "SUCCESS",
+      "note": "worker allocated",
+      "observed_status": "SUCCESS",
+      "tool_name": "allocate_worker",
+      "value": {
+        "allocation_id": "alloc-cluster_B-1",
+        "cluster_id": "cluster_B",
+        "status": "ACTIVE"
+      }
+    },
+    {
+      "action_id": "cloud_assumption_match_v1-step04-submit_job_B",
+      "actual_status": "SUCCESS",
+      "note": "job submitted",
+      "observed_status": "SUCCESS",
+      "tool_name": "submit_job",
+      "value": {
+        "allocation_id": "alloc-cluster_B-1",
+        "cluster_id": "cluster_B",
+        "job_id": "job-1",
+        "status": "SUBMITTED"
+      }
+    }
+  ]
+}

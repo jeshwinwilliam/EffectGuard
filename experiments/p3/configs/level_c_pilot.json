@@ -1,0 +1,17 @@
+{
+  "campaign_id": "p3-level-c-pilot-20260824",
+  "realism_level": "C",
+  "task_suite_path": "experiments/p3/tasks/level_b_tasks_v1.json",
+  "task_suite_version": "p3-level-c-v0",
+  "planned_runs": 30,
+  "strategies": ["blocking", "restart", "checkpoint", "dependency_only", "effectguard"],
+  "llm_estimate": {
+    "provider": "NOT_CONFIGURED",
+    "model": "NOT_CONFIGURED",
+    "estimated_model_calls": 180,
+    "estimated_prompt_tokens": 216000,
+    "estimated_completion_tokens": 54000,
+    "estimated_cost_usd": 0.0,
+    "notes": "Level C infrastructure was intentionally left unexecuted pending explicit approval."
+  }
+}

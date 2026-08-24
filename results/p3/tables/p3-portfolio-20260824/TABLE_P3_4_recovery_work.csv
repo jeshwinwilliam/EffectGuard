@@ -1,0 +1,16 @@
+scenario_family,strategy,run_count,correctness_rate,mean_precision,mean_recall,mean_unnecessary_selected,mean_recovery_work,validity_unknown_rate,unsupported_rate,mean_semantic_gap
+S1_FALLBACK_AFTER_UNKNOWN,blocking,49,1.0,,,0.0,0.0,0.0,0.0,0.0
+S1_FALLBACK_AFTER_UNKNOWN,checkpoint,49,1.0,1.0,1.0,0.0,5.0,0.0,0.0,0.0
+S1_FALLBACK_AFTER_UNKNOWN,dependency_only,49,1.0,1.0,1.0,0.0,7.0,0.0,0.0,0.0
+S1_FALLBACK_AFTER_UNKNOWN,effectguard,49,1.0,1.0,1.0,0.0,5.0,0.0,0.0,0.0
+S1_FALLBACK_AFTER_UNKNOWN,restart,49,1.0,0.4,1.0,3.0,10.0,0.0,0.0,0.0
+S4_VALID_DESCENDANT,blocking,49,1.0,,,0.0,0.0,0.0,0.0,0.0
+S4_VALID_DESCENDANT,checkpoint,49,1.0,0.3333333333333333,1.0,2.0,6.0,0.0,0.0,2.0
+S4_VALID_DESCENDANT,dependency_only,49,1.0,0.3333333333333333,1.0,2.0,9.0,0.0,0.0,2.0
+S4_VALID_DESCENDANT,effectguard,49,1.0,1.0,1.0,0.0,2.0,0.0,0.0,2.0
+S4_VALID_DESCENDANT,restart,49,1.0,0.16666666666666666,1.0,5.0,11.0,0.0,0.0,2.0
+S8_ASSUMPTION_MATCH,blocking,49,1.0,,,0.0,0.0,0.0,0.0,0.0
+S8_ASSUMPTION_MATCH,checkpoint,49,1.0,,,0.0,0.0,0.0,0.0,0.0
+S8_ASSUMPTION_MATCH,dependency_only,49,1.0,,,0.0,0.0,0.0,0.0,0.0
+S8_ASSUMPTION_MATCH,effectguard,49,1.0,,,0.0,0.0,0.0,0.0,0.0
+S8_ASSUMPTION_MATCH,restart,49,1.0,,,0.0,0.0,0.0,0.0,0.0

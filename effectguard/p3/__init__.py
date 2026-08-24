@@ -8,14 +8,28 @@ from .runner import (
     load_task_suite,
     verify_p2_baseline,
 )
+from .reporting import (
+    DEFAULT_P3_CONFIGS,
+    analyze_p3_campaign,
+    dry_run_p3_config,
+    execute_p3_config,
+    generate_p3_portfolio,
+    load_p3_config,
+)
 
 __all__ = [
     "P3LevelAPilotConfig",
     "P3LevelBCampaignConfig",
     "analyze_level_a_campaign",
     "analyze_level_b_campaign",
+    "analyze_p3_campaign",
+    "DEFAULT_P3_CONFIGS",
+    "dry_run_p3_config",
     "execute_level_a_campaign",
     "execute_level_b_campaign",
+    "execute_p3_config",
+    "generate_p3_portfolio",
     "load_task_suite",
+    "load_p3_config",
     "verify_p2_baseline",
 ]
