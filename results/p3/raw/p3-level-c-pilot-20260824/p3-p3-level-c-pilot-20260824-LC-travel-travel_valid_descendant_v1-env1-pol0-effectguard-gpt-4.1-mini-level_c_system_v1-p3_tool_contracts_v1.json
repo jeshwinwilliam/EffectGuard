@@ -1,0 +1,101 @@
+{
+  "assumptions": [],
+  "campaign_id": "p3-level-c-pilot-20260824",
+  "contradictions": 0,
+  "divergence_reason": null,
+  "divergence_step_index": null,
+  "domain": "travel",
+  "environment_seed": 1,
+  "estimated_or_actual_api_cost_usd": 0.0,
+  "failure": {
+    "attempts": [
+      {
+        "attempt": 1,
+        "http_status": 429
+      },
+      {
+        "attempt": 2,
+        "http_status": 429
+      }
+    ],
+    "error_class": "provider_http_error",
+    "error_message": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions",
+    "model": "gpt-4.1-mini",
+    "model_parameters": {
+      "endpoint": "chat_completions",
+      "model_seed": null,
+      "temperature": 0.0,
+      "top_p": null
+    },
+    "prompt_sha256": "1184e304e7ff81ca68e70eddb05907371115d51562b4188a46b7024cf555d8ec",
+    "prompt_version": "level_c_system_v1",
+    "provider": "openai-compatible",
+    "provider_metadata": {
+      "body_preview": "{\n    \"error\": {\n        \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\",\n        \"type\": \"insufficient_quota\",\n        \"param\": null,\n        \"code\": \"insufficient_quota\"\n    }\n}\n"
+    },
+    "provider_status": 429,
+    "run_id": "p3-p3-level-c-pilot-20260824-LC-travel-travel_valid_descendant_v1-env1-pol0-effectguard-gpt-4.1-mini-level_c_system_v1-p3_tool_contracts_v1",
+    "strategy": "effectguard",
+    "task_id": "travel_valid_descendant_v1",
+    "timestamp": "2026-08-24T06:59:46.894809+00:00",
+    "token_usage": {},
+    "tool_contract_sha256": "fd33a400bcf455d2b3d679f748a34b28071c54e95761a68b317fb89c2786ee2b",
+    "tool_contract_version": "p3_tool_contracts_v1"
+  },
+  "failure_category": "provider_http_error",
+  "final_state_evaluation": null,
+  "initial_state_hash": "34b247ec2550c5d8597c5931f652fb5a67cb0531a02d1cedc76660d1e3b78f85",
+  "input_tokens": 0,
+  "late_resolutions": [],
+  "model": "gpt-4.1-mini",
+  "model_call_count": 0,
+  "model_seed": null,
+  "model_visible_observations": [
+    {
+      "assumption_id": null,
+      "observation_id": "travel_valid_descendant_v1-obs-goal",
+      "provenance": [],
+      "source": "task_goal",
+      "value": {
+        "constraints": [
+          "destination = Seattle",
+          "arrival before 18:00",
+          "total budget <= 900",
+          "no duplicate active flight bookings",
+          "hotel dates match trip dates"
+        ],
+        "goal": "Book one valid flight and one compatible hotel for Seattle."
+      },
+      "virtual_time_ms": 0
+    }
+  ],
+  "output_tokens": 0,
+  "pairing_failure_reason": "provider_http_error",
+  "pairing_group_id": "travel_valid_descendant_v1-env1-pol0",
+  "pairing_valid": false,
+  "phase": "P3",
+  "policy_seed": 0,
+  "pre_recovery_context_hash": "9338d06a358d3f3c0076989b91a27ea7cac8a4e6f52389f34262bedcb090ba97",
+  "pre_recovery_context_hashes": [
+    "8ea129931f919208fc4d250fc0fcb5c361f93fd9aba4ae2a487b569d869ac3d5"
+  ],
+  "prompt_sha256": "1184e304e7ff81ca68e70eddb05907371115d51562b4188a46b7024cf555d8ec",
+  "prompt_version": "level_c_system_v1",
+  "provider": "openai-compatible",
+  "realism_level": "C",
+  "recovery_actions": [],
+  "run_id": "p3-p3-level-c-pilot-20260824-LC-travel-travel_valid_descendant_v1-env1-pol0-effectguard-gpt-4.1-mini-level_c_system_v1-p3_tool_contracts_v1",
+  "scenario": "S4_VALID_DESCENDANT",
+  "strategy": "effectguard",
+  "structured_model_outputs": [],
+  "success_failure_status": "FAILED",
+  "task_id": "travel_valid_descendant_v1",
+  "task_suite_version": "p3-level-b-v1",
+  "temperature": 0.0,
+  "tool_calls": [],
+  "tool_contract_sha256": "fd33a400bcf455d2b3d679f748a34b28071c54e95761a68b317fb89c2786ee2b",
+  "tool_contract_version": "p3_tool_contracts_v1",
+  "tool_results": [],
+  "top_p": null,
+  "total_tokens": 0
+}

@@ -15,7 +15,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from scipy import stats
 
-from .level_c import level_c_dry_run_summary
+from .level_c_runner import dry_run_level_c_config, execute_level_c_campaign
 from .models import P3LevelAPilotConfig, P3LevelBCampaignConfig
 from .runner import (
     _p3_dirs,
@@ -171,10 +171,7 @@ def instantiate_config(config_payload: dict[str, object]) -> P3LevelAPilotConfig
 def dry_run_p3_config(config_path: Path, *, output_root: Path | None = None) -> dict[str, object]:
     payload = load_p3_config(config_path)
     if str(payload["realism_level"]) == "C":
-        result = level_c_dry_run_summary(payload)
-        result["planned_runs"] = int(payload.get("planned_runs", 0))
-        result["result_paths"] = {name: str(path) for name, path in _p3_dirs(output_root or Path("results"), payload["campaign_id"]).items()}
-        return result
+        return dry_run_level_c_config(config_path, output_root=output_root)
     config = instantiate_config(payload)
     tasks = load_task_suite(Path(payload["task_suite_path"]))
     planned_runs = len(tasks) * len(config.environment_seeds) * len(config.policy_seeds) * len(config.strategies)
@@ -196,7 +193,7 @@ def execute_p3_config(config_path: Path, *, output_root: Path | None = None, dry
     payload = load_p3_config(config_path)
     realism_level = str(payload["realism_level"])
     if realism_level == "C":
-        return dry_run_p3_config(config_path, output_root=output_root)
+        return execute_level_c_campaign(config_path, output_root=output_root)
     config = instantiate_config(payload)
     if realism_level == "A":
         return execute_level_a_campaign(config, output_root=output_root)

@@ -112,9 +112,12 @@ class P3Trace:
     observations: list[dict[str, object]] = field(default_factory=list)
     assumptions: list[dict[str, object]] = field(default_factory=list)
     actions: list[dict[str, object]] = field(default_factory=list)
+    model_decisions: list[dict[str, object]] = field(default_factory=list)
     tool_results: list[dict[str, object]] = field(default_factory=list)
     late_resolutions: list[dict[str, object]] = field(default_factory=list)
     recovery_actions: list[dict[str, object]] = field(default_factory=list)
+    context_transitions: list[dict[str, object]] = field(default_factory=list)
+    failures: list[dict[str, object]] = field(default_factory=list)
     final_state: dict[str, object] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, object]:

@@ -1,0 +1,100 @@
+{
+  "assumptions": [],
+  "campaign_id": "p3-level-c-pilot-20260824",
+  "contradictions": 0,
+  "divergence_reason": null,
+  "divergence_step_index": null,
+  "domain": "procurement",
+  "environment_seed": 1,
+  "estimated_or_actual_api_cost_usd": 0.0,
+  "failure": {
+    "attempts": [
+      {
+        "attempt": 1,
+        "http_status": 429
+      },
+      {
+        "attempt": 2,
+        "http_status": 429
+      }
+    ],
+    "error_class": "provider_http_error",
+    "error_message": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions",
+    "model": "gpt-4.1-mini",
+    "model_parameters": {
+      "endpoint": "chat_completions",
+      "model_seed": null,
+      "temperature": 0.0,
+      "top_p": null
+    },
+    "prompt_sha256": "1184e304e7ff81ca68e70eddb05907371115d51562b4188a46b7024cf555d8ec",
+    "prompt_version": "level_c_system_v1",
+    "provider": "openai-compatible",
+    "provider_metadata": {
+      "body_preview": "{\n    \"error\": {\n        \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\",\n        \"type\": \"insufficient_quota\",\n        \"param\": null,\n        \"code\": \"insufficient_quota\"\n    }\n}\n"
+    },
+    "provider_status": 429,
+    "run_id": "p3-p3-level-c-pilot-20260824-LC-procurement-procurement_fallback_unknown_v2-env1-pol0-dependency_only-gpt-4.1-mini-level_c_system_v1-p3_tool_contracts_v1",
+    "strategy": "dependency_only",
+    "task_id": "procurement_fallback_unknown_v2",
+    "timestamp": "2026-08-24T06:59:44.989947+00:00",
+    "token_usage": {},
+    "tool_contract_sha256": "fd33a400bcf455d2b3d679f748a34b28071c54e95761a68b317fb89c2786ee2b",
+    "tool_contract_version": "p3_tool_contracts_v1"
+  },
+  "failure_category": "provider_http_error",
+  "final_state_evaluation": null,
+  "initial_state_hash": "1cfe0b09ca77b30a565aadcbb292d4d6fa64126a1c41c583e83edaaf37ff8ced",
+  "input_tokens": 0,
+  "late_resolutions": [],
+  "model": "gpt-4.1-mini",
+  "model_call_count": 0,
+  "model_seed": null,
+  "model_visible_observations": [
+    {
+      "assumption_id": null,
+      "observation_id": "procurement_fallback_unknown_v2-obs-goal",
+      "provenance": [],
+      "source": "task_goal",
+      "value": {
+        "constraints": [
+          "preferred supplier A if available",
+          "required quantity = 5",
+          "no duplicate active reservations",
+          "shipment must correspond to active reservation"
+        ],
+        "goal": "Secure the larger order and ensure only one surviving shipment remains."
+      },
+      "virtual_time_ms": 0
+    }
+  ],
+  "output_tokens": 0,
+  "pairing_failure_reason": "provider_http_error",
+  "pairing_group_id": "procurement_fallback_unknown_v2-env1-pol0",
+  "pairing_valid": false,
+  "phase": "P3",
+  "policy_seed": 0,
+  "pre_recovery_context_hash": "136e01b413d99069d192e2dedd88c78a4ca1fd3af8bf2aa26c88aaa9cec8f8b1",
+  "pre_recovery_context_hashes": [
+    "99f3fd69e474e9e9aa1bbb6b25f3ef5134457536de11f40dfb784d663993705b"
+  ],
+  "prompt_sha256": "1184e304e7ff81ca68e70eddb05907371115d51562b4188a46b7024cf555d8ec",
+  "prompt_version": "level_c_system_v1",
+  "provider": "openai-compatible",
+  "realism_level": "C",
+  "recovery_actions": [],
+  "run_id": "p3-p3-level-c-pilot-20260824-LC-procurement-procurement_fallback_unknown_v2-env1-pol0-dependency_only-gpt-4.1-mini-level_c_system_v1-p3_tool_contracts_v1",
+  "scenario": "S1_FALLBACK_AFTER_UNKNOWN",
+  "strategy": "dependency_only",
+  "structured_model_outputs": [],
+  "success_failure_status": "FAILED",
+  "task_id": "procurement_fallback_unknown_v2",
+  "task_suite_version": "p3-level-b-v1",
+  "temperature": 0.0,
+  "tool_calls": [],
+  "tool_contract_sha256": "fd33a400bcf455d2b3d679f748a34b28071c54e95761a68b317fb89c2786ee2b",
+  "tool_contract_version": "p3_tool_contracts_v1",
+  "tool_results": [],
+  "top_p": null,
+  "total_tokens": 0
+}

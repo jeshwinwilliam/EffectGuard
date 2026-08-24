@@ -2,17 +2,41 @@
   "campaign_id": "p3-level-c-pilot-20260824",
   "realism_level": "C",
   "task_suite_path": "experiments/p3/tasks/level_b_tasks_v1.json",
-  "task_suite_version": "p3-level-c-v0",
-  "planned_runs": 30,
+  "task_suite_version": "p3-level-b-v1",
+  "environment_seeds": [1],
+  "policy_seeds": [0],
   "strategies": ["blocking", "restart", "checkpoint", "dependency_only", "effectguard"],
   "prompt_path": "experiments/p3/prompts/level_c_system.txt",
-  "llm_estimate": {
+  "prompt_version": "level_c_system_v1",
+  "tool_contract_version": "p3_tool_contracts_v1",
+  "planned_runs": 30,
+  "llm": {
     "provider": "openai-compatible",
     "model": "gpt-4.1-mini",
+    "endpoint": "chat_completions",
+    "api_key_env": "OPENAI_API_KEY",
+    "temperature": 0.0,
+    "top_p": null,
+    "timeout_seconds": 30.0,
+    "seed_supported": false,
+    "model_seed": null,
+    "max_retries": 1,
+    "retryable_statuses": [429, 500, 502, 503, 504],
+    "structured_output_schema_version": "level_c_action_selection_v1",
+    "estimated_model_calls_per_run": 6,
+    "estimated_prompt_tokens_per_call": 1200,
+    "estimated_completion_tokens_per_call": 300,
+    "pricing": {
+      "source": "openai-gpt-4.1-mini-standard-pricing-2026-08-24",
+      "input_per_million_usd": 0.4,
+      "output_per_million_usd": 1.6
+    }
+  },
+  "llm_estimate": {
     "estimated_model_calls": 180,
     "estimated_prompt_tokens": 216000,
     "estimated_completion_tokens": 54000,
-    "estimated_cost_usd": 0.0,
-    "notes": "Level C infrastructure is implemented, but paid or network-backed execution remains intentionally unlaunched pending explicit approval and credentials."
+    "estimated_cost_usd": 0.1728,
+    "notes": "Dry-run estimates only. Real execution remains gated behind explicit approval and credentials."
   }
 }

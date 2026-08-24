@@ -1,0 +1,89 @@
+{
+  "actual_cost_usd": 0.0,
+  "api_call_count": 0,
+  "baseline": {
+    "current_commit": "e8a3db481644b3036380c88a773f94dc272fd2d6",
+    "p2_main_raw_aggregate_sha256": "67af4f0ec2e357f074709ab94f373b7257a73f6dc15d5217760f454bfcc3efeb",
+    "p2_main_raw_file_count": 16200,
+    "pytest_expected_passes": 90
+  },
+  "campaign_id": "p3-level-c-pilot-20260824",
+  "completed_runs": 0,
+  "config_path": "experiments/p3/configs/level_c_pilot.json",
+  "config_sha256": "c58b91dc7579ba940789939d407dda73f29be67bd281dc4d3944c9dea52a1772",
+  "environment_seeds": [
+    1
+  ],
+  "estimated_max_cost_usd": 0.1728,
+  "failed_runs": 30,
+  "git_commit": "e8a3db481644b3036380c88a773f94dc272fd2d6",
+  "input_tokens": 0,
+  "model": "gpt-4.1-mini",
+  "model_parameters": {
+    "endpoint": "chat_completions",
+    "model_seed": null,
+    "seed_supported": false,
+    "structured_output_schema_version": "level_c_action_selection_v1",
+    "temperature": 0.0,
+    "timeout_seconds": 30.0,
+    "top_p": null
+  },
+  "output_tokens": 0,
+  "phase": "P3",
+  "planned_runs": 30,
+  "policy_seeds": [
+    0
+  ],
+  "pricing": {
+    "input_price_per_million_usd": 0.4,
+    "output_price_per_million_usd": 1.6,
+    "source": "openai-gpt-4.1-mini-standard-pricing-2026-08-24"
+  },
+  "prompt_path": "experiments/p3/prompts/level_c_system.txt",
+  "prompt_sha256": "1184e304e7ff81ca68e70eddb05907371115d51562b4188a46b7024cf555d8ec",
+  "prompt_version": "level_c_system_v1",
+  "provider": "openai-compatible",
+  "realism_level": "C",
+  "result_paths": {
+    "figures": "results/p3/figures/p3-level-c-pilot-20260824",
+    "manifests": "results/p3/manifests/p3-level-c-pilot-20260824",
+    "processed": "results/p3/processed/p3-level-c-pilot-20260824",
+    "raw": "results/p3/raw/p3-level-c-pilot-20260824",
+    "tables": "results/p3/tables/p3-level-c-pilot-20260824",
+    "traces": "results/p3/traces/p3-level-c-pilot-20260824"
+  },
+  "retry_policy": {
+    "malformed_response_policy": "no semantic retry; persist failure artifact",
+    "retryable_statuses": [
+      429,
+      500,
+      502,
+      503,
+      504
+    ],
+    "semantic_retries": 0,
+    "transient_infrastructure_retries": 1
+  },
+  "strategies": [
+    "blocking",
+    "restart",
+    "checkpoint",
+    "dependency_only",
+    "effectguard"
+  ],
+  "task_suite_path": "experiments/p3/tasks/level_b_tasks_v1.json",
+  "task_suite_sha256": "bf52d42056ff24e782d2728ab4687193aa8c7f04b5f5b91e4fadef7bdcdb9259",
+  "task_suite_version": "p3-level-b-v1",
+  "tasks": [
+    "procurement_fallback_unknown_v1",
+    "procurement_fallback_unknown_v2",
+    "travel_valid_descendant_v1",
+    "travel_valid_descendant_v2",
+    "cloud_assumption_match_v1",
+    "cloud_assumption_match_v2"
+  ],
+  "timestamp": "2026-08-24T06:59:33.177436+00:00",
+  "tool_contract_sha256": "fd33a400bcf455d2b3d679f748a34b28071c54e95761a68b317fb89c2786ee2b",
+  "tool_contract_version": "p3_tool_contracts_v1",
+  "total_tokens": 0
+}

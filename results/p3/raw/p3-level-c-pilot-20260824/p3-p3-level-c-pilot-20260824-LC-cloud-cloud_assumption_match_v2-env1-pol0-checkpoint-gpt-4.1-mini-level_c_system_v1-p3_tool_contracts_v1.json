@@ -1,0 +1,99 @@
+{
+  "assumptions": [],
+  "campaign_id": "p3-level-c-pilot-20260824",
+  "contradictions": 0,
+  "divergence_reason": null,
+  "divergence_step_index": null,
+  "domain": "cloud",
+  "environment_seed": 1,
+  "estimated_or_actual_api_cost_usd": 0.0,
+  "failure": {
+    "attempts": [
+      {
+        "attempt": 1,
+        "http_status": 429
+      },
+      {
+        "attempt": 2,
+        "http_status": 429
+      }
+    ],
+    "error_class": "provider_http_error",
+    "error_message": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions",
+    "model": "gpt-4.1-mini",
+    "model_parameters": {
+      "endpoint": "chat_completions",
+      "model_seed": null,
+      "temperature": 0.0,
+      "top_p": null
+    },
+    "prompt_sha256": "1184e304e7ff81ca68e70eddb05907371115d51562b4188a46b7024cf555d8ec",
+    "prompt_version": "level_c_system_v1",
+    "provider": "openai-compatible",
+    "provider_metadata": {
+      "body_preview": "{\n    \"error\": {\n        \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\",\n        \"type\": \"insufficient_quota\",\n        \"param\": null,\n        \"code\": \"insufficient_quota\"\n    }\n}\n"
+    },
+    "provider_status": 429,
+    "run_id": "p3-p3-level-c-pilot-20260824-LC-cloud-cloud_assumption_match_v2-env1-pol0-checkpoint-gpt-4.1-mini-level_c_system_v1-p3_tool_contracts_v1",
+    "strategy": "checkpoint",
+    "task_id": "cloud_assumption_match_v2",
+    "timestamp": "2026-08-24T06:59:50.671692+00:00",
+    "token_usage": {},
+    "tool_contract_sha256": "fd33a400bcf455d2b3d679f748a34b28071c54e95761a68b317fb89c2786ee2b",
+    "tool_contract_version": "p3_tool_contracts_v1"
+  },
+  "failure_category": "provider_http_error",
+  "final_state_evaluation": null,
+  "initial_state_hash": "46582427f6f547240eea89cb62580db69b29494225e324be234d7614bcffaa52",
+  "input_tokens": 0,
+  "late_resolutions": [],
+  "model": "gpt-4.1-mini",
+  "model_call_count": 0,
+  "model_seed": null,
+  "model_visible_observations": [
+    {
+      "assumption_id": null,
+      "observation_id": "cloud_assumption_match_v2-obs-goal",
+      "provenance": [],
+      "source": "task_goal",
+      "value": {
+        "constraints": [
+          "use cluster A if capacity is available",
+          "no duplicate active worker allocations",
+          "job must correspond to active allocation"
+        ],
+        "goal": "Allocate compute for the medium workload and keep exactly one valid submitted job."
+      },
+      "virtual_time_ms": 0
+    }
+  ],
+  "output_tokens": 0,
+  "pairing_failure_reason": "provider_http_error",
+  "pairing_group_id": "cloud_assumption_match_v2-env1-pol0",
+  "pairing_valid": false,
+  "phase": "P3",
+  "policy_seed": 0,
+  "pre_recovery_context_hash": "d47876eff4a4ad59e587b969d34e688f2dc300991dd52d1212486e6d35697f1f",
+  "pre_recovery_context_hashes": [
+    "c921a57ddbb1e6a7ab9097a48b5577d57becbf0621f997b4c77743bce0a65f97"
+  ],
+  "prompt_sha256": "1184e304e7ff81ca68e70eddb05907371115d51562b4188a46b7024cf555d8ec",
+  "prompt_version": "level_c_system_v1",
+  "provider": "openai-compatible",
+  "realism_level": "C",
+  "recovery_actions": [],
+  "run_id": "p3-p3-level-c-pilot-20260824-LC-cloud-cloud_assumption_match_v2-env1-pol0-checkpoint-gpt-4.1-mini-level_c_system_v1-p3_tool_contracts_v1",
+  "scenario": "S8_ASSUMPTION_MATCH",
+  "strategy": "checkpoint",
+  "structured_model_outputs": [],
+  "success_failure_status": "FAILED",
+  "task_id": "cloud_assumption_match_v2",
+  "task_suite_version": "p3-level-b-v1",
+  "temperature": 0.0,
+  "tool_calls": [],
+  "tool_contract_sha256": "fd33a400bcf455d2b3d679f748a34b28071c54e95761a68b317fb89c2786ee2b",
+  "tool_contract_version": "p3_tool_contracts_v1",
+  "tool_results": [],
+  "top_p": null,
+  "total_tokens": 0
+}

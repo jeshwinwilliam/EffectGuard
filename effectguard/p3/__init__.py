@@ -21,12 +21,14 @@ from .level_c import (
     AgentModelDecision,
     CandidateAction,
     LevelCContext,
+    LevelCModelError,
     MockAgentModel,
     OpenAICompatibleAgentModel,
     build_level_c_context,
     level_c_dry_run_summary,
     select_candidate_action,
 )
+from .level_c_runner import dry_run_level_c_config, execute_level_c_campaign, load_level_c_config
 
 __all__ = [
     "P3LevelAPilotConfig",
@@ -44,7 +46,11 @@ __all__ = [
     "AgentModelDecision",
     "CandidateAction",
     "LevelCContext",
+    "LevelCModelError",
+    "dry_run_level_c_config",
+    "execute_level_c_campaign",
     "load_task_suite",
+    "load_level_c_config",
     "load_p3_config",
     "MockAgentModel",
     "OpenAICompatibleAgentModel",

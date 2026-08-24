@@ -71,6 +71,25 @@ class AgentModel(Protocol):
         ...
 
 
+class LevelCModelError(RuntimeError):
+    def __init__(
+        self,
+        error_class: str,
+        message: str,
+        *,
+        attempts: list[dict[str, object]] | None = None,
+        provider_status: int | None = None,
+        provider_metadata: dict[str, object] | None = None,
+        token_usage: dict[str, object] | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.error_class = error_class
+        self.attempts = attempts or []
+        self.provider_status = provider_status
+        self.provider_metadata = provider_metadata or {}
+        self.token_usage = token_usage or {}
+
+
 class MockAgentModel:
     def __init__(self, *, model_name: str = "mock-level-c-agent-v1") -> None:
         self.model_name = model_name
@@ -101,18 +120,30 @@ class OpenAICompatibleAgentModel:
         model_name: str,
         system_prompt_path: Path,
         timeout_seconds: float = 30.0,
+        top_p: float | None = None,
+        model_seed: int | None = None,
+        max_retries: int = 0,
+        retryable_statuses: tuple[int, ...] = (429, 500, 502, 503, 504),
     ) -> None:
         self.base_url = base_url
         self.api_key_env = api_key_env
         self.model_name = model_name
         self.system_prompt_path = system_prompt_path
         self.timeout_seconds = timeout_seconds
+        self.top_p = top_p
+        self.model_seed = model_seed
+        self.max_retries = max(0, max_retries)
+        self.retryable_statuses = retryable_statuses
 
     def decide(self, context: LevelCContext) -> AgentModelDecision:
         api_key = os.environ.get(self.api_key_env)
         if not api_key:
-            raise RuntimeError(f"missing {self.api_key_env}; Level C execution cannot proceed")
+            raise LevelCModelError(
+                "missing_api_key",
+                f"missing {self.api_key_env}; Level C execution cannot proceed",
+            )
         system_prompt = self.system_prompt_path.read_text(encoding="utf-8")
+        attempts: list[dict[str, object]] = []
         payload = {
             "model": self.model_name,
             "temperature": 0.0,
@@ -122,25 +153,95 @@ class OpenAICompatibleAgentModel:
                 {"role": "user", "content": json.dumps(context.prompt_payload(), sort_keys=True)},
             ],
         }
-        response = requests.post(
-            self.base_url,
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            json=payload,
-            timeout=self.timeout_seconds,
-        )
-        response.raise_for_status()
-        body = response.json()
-        content = body["choices"][0]["message"]["content"]
-        parsed = json.loads(content)
-        usage = body.get("usage", {})
-        return AgentModelDecision(
-            selected_action_key=str(parsed["selected_action_key"]),
-            rationale=str(parsed.get("rationale", "")),
-            raw_response=body,
-            model_name=self.model_name,
-            prompt_tokens_estimate=int(usage.get("prompt_tokens", 0)),
-            completion_tokens_estimate=int(usage.get("completion_tokens", 0)),
-        )
+        if self.top_p is not None:
+            payload["top_p"] = self.top_p
+        if self.model_seed is not None:
+            payload["seed"] = self.model_seed
+        for attempt_index in range(1, self.max_retries + 2):
+            try:
+                response = requests.post(
+                    self.base_url,
+                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                    json=payload,
+                    timeout=self.timeout_seconds,
+                )
+            except requests.Timeout as exc:
+                attempts.append({"attempt": attempt_index, "error_class": "timeout"})
+                if attempt_index <= self.max_retries:
+                    continue
+                raise LevelCModelError("timeout", str(exc), attempts=attempts) from exc
+            except requests.RequestException as exc:
+                attempts.append({"attempt": attempt_index, "error_class": "request_exception"})
+                if attempt_index <= self.max_retries:
+                    continue
+                raise LevelCModelError("request_exception", str(exc), attempts=attempts) from exc
+
+            attempts.append({"attempt": attempt_index, "http_status": response.status_code})
+            if response.status_code in self.retryable_statuses and attempt_index <= self.max_retries:
+                continue
+            try:
+                response.raise_for_status()
+            except requests.HTTPError as exc:
+                raise LevelCModelError(
+                    "provider_http_error",
+                    str(exc),
+                    attempts=attempts,
+                    provider_status=response.status_code,
+                    provider_metadata={"body_preview": response.text[:500]},
+                ) from exc
+
+            body = response.json()
+            usage = body.get("usage", {})
+            choices = body.get("choices", [])
+            if not choices:
+                raise LevelCModelError(
+                    "empty_response",
+                    "provider returned no choices",
+                    attempts=attempts,
+                    provider_status=response.status_code,
+                    provider_metadata={"body_preview": response.text[:500]},
+                    token_usage=usage,
+                )
+            content = choices[0].get("message", {}).get("content")
+            if not content:
+                raise LevelCModelError(
+                    "empty_response",
+                    "provider returned empty message content",
+                    attempts=attempts,
+                    provider_status=response.status_code,
+                    provider_metadata={"body_preview": response.text[:500]},
+                    token_usage=usage,
+                )
+            try:
+                parsed = json.loads(content)
+            except json.JSONDecodeError as exc:
+                raise LevelCModelError(
+                    "invalid_json",
+                    str(exc),
+                    attempts=attempts,
+                    provider_status=response.status_code,
+                    provider_metadata={"content_preview": content[:500]},
+                    token_usage=usage,
+                ) from exc
+            selected_action_key = parsed.get("selected_action_key")
+            if not isinstance(selected_action_key, str) or not selected_action_key:
+                raise LevelCModelError(
+                    "missing_required_field",
+                    "provider response missing selected_action_key",
+                    attempts=attempts,
+                    provider_status=response.status_code,
+                    provider_metadata={"content_preview": content[:500]},
+                    token_usage=usage,
+                )
+            return AgentModelDecision(
+                selected_action_key=selected_action_key,
+                rationale=str(parsed.get("rationale", "")),
+                raw_response={"provider_response": body, "attempts": attempts},
+                model_name=self.model_name,
+                prompt_tokens_estimate=int(usage.get("prompt_tokens", 0)),
+                completion_tokens_estimate=int(usage.get("completion_tokens", 0)),
+            )
+        raise LevelCModelError("unexpected_state", "model call loop exited unexpectedly", attempts=attempts)
 
 
 def build_level_c_context(
