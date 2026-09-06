@@ -14,6 +14,7 @@ In plain language, the prototype simulates a situation where:
 6. the earlier mutation later becomes visible as successful
 7. the runtime discovers that its earlier assumption was wrong
 8. restart-style recovery turns out not to be the same thing as rewinding external reality
+9. 
 
 That last point is the central idea behind the repository.
 
