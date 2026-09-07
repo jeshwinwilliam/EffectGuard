@@ -35,7 +35,6 @@ The experiment is intentionally small enough to understand end to end, but stric
 ## P0 Scope
 
 ### Included
-
 - deterministic workflow execution
 - deterministic fault injection
 - virtual-clock timing for reproducible runs
