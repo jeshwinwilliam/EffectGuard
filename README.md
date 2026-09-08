@@ -22,6 +22,9 @@ That last point is the central idea behind the repository.
 
 In many discussions about orchestration and agent execution, restart, replay, and checkpoint restore are treated as broadly sufficient recovery tools. They are useful, but they are not magical. They can rebuild local runtime progress, yet they do not automatically undo a side effect that has already happened in an outside system.
 
+
+
+
 EffectGuard exists to make that distinction concrete with a deterministic simulator:
 
 - the runtime sees only observable tool outcomes
