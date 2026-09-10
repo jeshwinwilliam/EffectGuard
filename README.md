@@ -35,6 +35,8 @@ EffectGuard exists to make that distinction concrete with a deterministic simula
 
 The experiment is intentionally small enough to understand end to end, but strict enough to reflect a real systems problem rather than a toy retry example.
 
+
+
 ## P0 Scope
 
 ### Included
